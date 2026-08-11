@@ -18,8 +18,8 @@ export default function Login() {
   const login = useMutation({
     mutationFn: () => signIn(email, password),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["session"] });
-      navigate("/");
+      await queryClient.refetchQueries({ queryKey: ["session"] });
+      navigate("/", { replace: true });
     },
     onError: (err) => toast.error(err.message),
   });

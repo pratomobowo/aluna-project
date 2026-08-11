@@ -25,7 +25,8 @@ export default function Register() {
   const register = useMutation({
     mutationFn: () => signUp(name, email, password),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["session"] });
+      // Wait for session refetch to complete so RootGate sees the new user
+      await queryClient.refetchQueries({ queryKey: ["session"] });
       const pending = localStorage.getItem("aluna-pending-answers");
       if (pending) {
         try {
@@ -34,11 +35,12 @@ export default function Register() {
             method: "POST",
             body: { answers },
           });
+          localStorage.removeItem("aluna-pending-answers");
         } catch {
           // ignore — answers stay in localStorage for the next submit
         }
       }
-      navigate("/");
+      navigate("/", { replace: true });
     },
     onError: (err) => toast.error(err.message),
   });
