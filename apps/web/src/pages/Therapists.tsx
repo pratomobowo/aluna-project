@@ -114,7 +114,7 @@ export default function Therapists() {
         </div>
 
         <div
-          className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1"
+          className="-mx-5 flex gap-2 overflow-x-auto no-scrollbar px-5 pb-1"
           role="group"
           aria-label="Filter spesialisasi"
         >

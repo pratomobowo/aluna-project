@@ -103,7 +103,7 @@ export default function SlotPicker({
         <div className="flex flex-col gap-2">
           <p className="text-xs font-semibold text-muted-foreground">Pilih Tanggal</p>
           <div
-            className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1"
+            className="-mx-5 flex gap-2 overflow-x-auto no-scrollbar px-5 pb-1"
             role="list"
             aria-label="Pilih tanggal"
           >

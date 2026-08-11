@@ -162,16 +162,11 @@
     }
 }
 
-/* JourneyMap current-point pulse */
-@keyframes jm-pulse {
-  0% { transform: scale(0.55); opacity: 0.45; }
-  70%, 100% { transform: scale(1.6); opacity: 0; }
-}
-.jm-pulse {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: jm-pulse 2.4s ease-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .jm-pulse { animation: none; }
+/* Sembunyikan scrollbar tapi tetap bisa di-scroll (horizontal card sections) */
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

@@ -267,7 +267,7 @@ export default function Home() {
                   <ArrowRight className="size-3.5" aria-hidden />
                 </Link>
               </div>
-              <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0">
+              <div className="-mx-5 flex gap-3 overflow-x-auto no-scrollbar px-5 pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0">
                 {therapists.data?.slice(0, 4).map((t) => (
                   <Link
                     key={t.id}
@@ -302,7 +302,7 @@ export default function Home() {
                   <ArrowRight className="size-3.5" aria-hidden />
                 </span>
               </div>
-              <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0">
+              <div className="-mx-5 flex gap-3 overflow-x-auto no-scrollbar px-5 pb-2 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0">
                 {classes.data?.map((c) => {
                   const Icon = classIcon(c.icon);
                   return (
@@ -327,7 +327,7 @@ export default function Home() {
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="font-serif text-lg">Gabung komunitas</h2>
               </div>
-              <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0">
+              <div className="-mx-5 flex gap-3 overflow-x-auto no-scrollbar px-5 pb-2 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0">
                 {communities.data?.map((com) => {
                   const Icon = classIcon(com.icon);
                   const meta = `${com.memberCount.toLocaleString("id-ID")} anggota${com.schedule ? ` · ${com.schedule}` : ""}`;
