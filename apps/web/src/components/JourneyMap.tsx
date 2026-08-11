@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { Check, Flag, MapPin, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +53,7 @@ export default function JourneyMap({
   className,
 }: JourneyMapProps) {
   const [active, setActive] = useState<number | null>(null);
+  const reduceMotion = useReducedMotion();
   const completed = new Set(done);
   for (let n = 1; n < current; n++) completed.add(n);
 
@@ -150,17 +152,23 @@ export default function JourneyMap({
           </g>
         </g>
 
-        {SEGMENTS.map((s, i) => (
-          <path
-            key={i}
-            d={s.d}
-            fill="none"
-            strokeWidth="4.5"
-            strokeLinecap="round"
-            strokeDasharray="1 9"
-            className={s.end <= current ? "stroke-primary" : "stroke-muted-foreground/40"}
-          />
-        ))}
+        {SEGMENTS.map((s, i) => {
+          const reached = s.end <= current;
+          return (
+            <motion.path
+              key={i}
+              d={s.d}
+              fill="none"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+              strokeDasharray="1 9"
+              className={reached ? "stroke-primary" : "stroke-muted-foreground/40"}
+              initial={reduceMotion ? false : { pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+            />
+          );
+        })}
 
         {MILESTONES.map((m, i) => {
           const n = i + 1;
@@ -173,11 +181,15 @@ export default function JourneyMap({
           const iconCy = isCurrent ? top * 0.65 : top * 0.68;
 
           return (
-            <g
+            <motion.g
               key={n}
               transform={`translate(${m.x} ${m.y})`}
               onClick={() => setActive((a) => (a === n ? null : n))}
-              className="cursor-pointer transition-transform duration-150 [&:hover]:scale-110"
+              className="cursor-pointer [&:hover]:scale-110"
+              style={{ transformOrigin: "0px 0px" }}
+              initial={reduceMotion ? false : { scale: 0 }}
+              animate={{ scale: isSelected ? 1.15 : 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 18 }}
               role="button"
               aria-label={`${isDone ? "Selesai: " : ""}${allLabels[n - 1] ?? `Titik ${n}`}`}
               aria-expanded={isSelected}
@@ -256,33 +268,40 @@ export default function JourneyMap({
                   </text>
                 </>
               )}
-            </g>
+            </motion.g>
           );
         })}
       </svg>
 
       {/* Bubble info titik yang diklik — muncul tepat di atas pin, dengan tombol close */}
-      {active != null && activeM && (
-        <div
-          role="dialog"
-          aria-label={`Info ${allLabels[active - 1]}`}
-          className="absolute z-20 -translate-x-1/2 rounded-xl bg-background p-3 shadow-lg ring-1 ring-foreground/10"
-          style={{ left: bubbleLeft, top: bubbleTop }}
-        >
-          <button
-            type="button"
-            onClick={() => setActive(null)}
-            className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Tutup"
+      <AnimatePresence>
+        {active != null && activeM && (
+          <motion.div
+            key={active}
+            role="dialog"
+            aria-label={`Info ${allLabels[active - 1]}`}
+            className="absolute z-20 -translate-x-1/2 rounded-xl bg-background p-3 shadow-lg ring-1 ring-foreground/10"
+            style={{ left: bubbleLeft, top: bubbleTop }}
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.9, y: 4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, scale: 0.9, y: 4 }}
+            transition={{ duration: 0.15 }}
           >
-            <X className="size-3.5" aria-hidden />
-          </button>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
-            {completed.has(active) ? "Selesai" : active === current ? "Kamu di sini" : active === MILESTONES.length ? "Tujuan" : `Titik ${active}`}
-          </p>
-          <p className="mt-0.5 pr-5 text-sm font-bold">{allLabels[active - 1]}</p>
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={() => setActive(null)}
+              className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Tutup"
+            >
+              <X className="size-3.5" aria-hidden />
+            </button>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+              {completed.has(active) ? "Selesai" : active === current ? "Kamu di sini" : active === MILESTONES.length ? "Tujuan" : `Titik ${active}`}
+            </p>
+            <p className="mt-0.5 pr-5 text-sm font-bold">{allLabels[active - 1]}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
