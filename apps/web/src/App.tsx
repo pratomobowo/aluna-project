@@ -1,35 +1,35 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import JourneyMap from "@/components/JourneyMap";
+import { Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
+import SessionGuard from "@/components/SessionGuard";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+
+function Home() {
+  return (
+    <main className="flex min-h-dvh items-center justify-center bg-background px-6">
+      <p className="font-serif text-2xl italic">
+        Beranda Aluna — assessment menyusul.
+      </p>
+    </main>
+  );
+}
 
 export default function App() {
   return (
-    <main className="flex min-h-screen items-center justify-center gap-8 bg-background p-6">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="font-serif text-2xl italic">
-            Perjalananmu bersama Aluna
-          </CardTitle>
-          <CardDescription>
-            Ruang aman untuk pulih, selangkah demi selangkah.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">
-            Tema Aluna aktif: cream, hijau brand, aksen sun.
-          </p>
-          <Button>Mulai Perjalanan</Button>
-        </CardContent>
-      </Card>
-      <div className="hidden w-full max-w-xs sm:block">
-        <JourneyMap current={3} done={[1, 2]} labels={["Mulai", "Pahami", "Konseling", "Ritme", "Terhubung", "Pulih"]} />
-      </div>
-    </main>
+    <>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/"
+          element={
+            <SessionGuard>
+              <Home />
+            </SessionGuard>
+          }
+        />
+      </Routes>
+      <Toaster />
+    </>
   );
 }

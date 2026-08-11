@@ -1,0 +1,45 @@
+import { apiFetch } from "./api";
+
+export interface AuthUser {
+  id: string;
+  name?: string;
+  email?: string;
+  image?: string;
+}
+
+export interface SessionResponse {
+  session: { id: string; userId: string; expiresAt: Date | string } | null;
+  user: AuthUser | null;
+}
+
+export async function getSession(): Promise<SessionResponse> {
+  return apiFetch<SessionResponse>("/api/auth/get-session");
+}
+
+export async function signIn(email: string, password: string) {
+  return apiFetch("/api/auth/sign-in/email", {
+    method: "POST",
+    body: { email, password },
+  });
+}
+
+export async function signUp(name: string, email: string, password: string) {
+  return apiFetch("/api/auth/sign-up/email", {
+    method: "POST",
+    body: { name, email, password },
+  });
+}
+
+export async function signInSocial(provider: "google") {
+  return apiFetch<{ url?: string }>("/api/auth/sign-in/social", {
+    method: "POST",
+    body: { provider, callbackURL: "/" },
+  });
+}
+
+export async function signOut() {
+  return apiFetch("/api/auth/sign-out", {
+    method: "POST",
+    body: {},
+  });
+}
