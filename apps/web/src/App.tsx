@@ -10,6 +10,12 @@ import Result from "@/pages/Result";
 import Safety from "@/pages/Safety";
 import Therapists from "@/pages/Therapists";
 import TherapistDetail from "@/pages/TherapistDetail";
+import Booking from "@/pages/Booking";
+import Payment from "@/pages/Payment";
+import PaymentSuccess from "@/pages/PaymentSuccess";
+import PackageBooking from "@/pages/PackageBooking";
+import PackagePayment from "@/pages/PackagePayment";
+import PackageSuccess from "@/pages/PackageSuccess";
 
 export default function App() {
   return (
@@ -41,6 +47,54 @@ export default function App() {
           element={
             <SessionGuard>
               <TherapistDetail />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/booking"
+          element={
+            <SessionGuard>
+              <Booking />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/payment"
+          element={
+            <SessionGuard>
+              <Payment />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/payment-success"
+          element={
+            <SessionGuard>
+              <PaymentSuccess />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/booking-package"
+          element={
+            <SessionGuard>
+              <PackageBooking />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/package-payment"
+          element={
+            <SessionGuard>
+              <PackagePayment />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/package-success"
+          element={
+            <SessionGuard>
+              <PackageSuccess />
             </SessionGuard>
           }
         />
