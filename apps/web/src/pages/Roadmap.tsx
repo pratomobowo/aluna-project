@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
 import TopBar from "@/components/TopBar";
+import SessionReminder from "@/components/SessionReminder";
 
 interface RoadmapResponse {
   locked: boolean;
@@ -71,6 +72,7 @@ export default function Roadmap() {
     <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-12">
       <TopBar />
       <div className="flex flex-col gap-5 px-5 py-4">
+        <SessionReminder />
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Roadmap Personal

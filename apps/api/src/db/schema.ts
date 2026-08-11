@@ -102,6 +102,21 @@ export const unlocks = pgTable("unlocks", {
   paidAt: timestamp("paid_at")
 });
 
+export const profiles = pgTable(
+  "profiles",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    gender: text("gender"),
+    birthYear: integer("birth_year"),
+    city: text("city"),
+    referralSource: text("referral_source"),
+    updatedAt: timestamp("updated_at").defaultNow()
+  },
+  (table) => [index("profiles_userId_idx").on(table.userId)]
+);
+
 export const therapists = pgTable("therapists", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -151,7 +166,26 @@ export const transactions = pgTable("transactions", {
   type: text("type").notNull(),
   referenceId: integer("reference_id"),
   amount: integer("amount").notNull(),
+  therapistId: integer("therapist_id").references(() => therapists.id),
+  therapistNet: integer("therapist_net"),
   status: text("status").default("pending"),
   gatewayRef: text("gateway_ref"),
   createdAt: timestamp("created_at").defaultNow()
 });
+
+export const journalEntries = pgTable(
+  "journal_entries",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    date: text("date").notNull(),
+    mood: integer("mood").notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at").defaultNow()
+  },
+  (table) => [
+    uniqueIndex("journal_entries_userId_date_idx").on(table.userId, table.date)
+  ]
+);

@@ -89,6 +89,8 @@ bookingRoutes.get("/bookings", async (c) => {
       therapistId: bookings.therapistId,
       therapistName: therapists.name,
       scheduleId: bookings.scheduleId,
+      scheduleDate: schedules.date,
+      scheduleTime: schedules.time,
       packageId: bookings.packageId,
       mode: bookings.mode,
       price: bookings.price,
@@ -97,6 +99,7 @@ bookingRoutes.get("/bookings", async (c) => {
     })
     .from(bookings)
     .leftJoin(therapists, eq(therapists.id, bookings.therapistId))
+    .leftJoin(schedules, eq(schedules.id, bookings.scheduleId))
     .where(eq(bookings.userId, user.id))
     .orderBy(desc(bookings.createdAt));
   return c.json(rows);

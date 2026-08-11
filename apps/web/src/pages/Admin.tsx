@@ -45,6 +45,17 @@ interface AdminBooking {
   status: string;
 }
 
+interface AdminTransaction {
+  id: number;
+  userEmail: string | null;
+  type: string;
+  amount: number;
+  therapistName: string | null;
+  therapistNet: number | null;
+  status: string;
+  createdAt: string;
+}
+
 interface TherapistForm {
   name: string;
   title: string;
@@ -328,9 +339,78 @@ function BookingsTab() {
   );
 }
 
+function TransactionsTab() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["admin-transactions"],
+    queryFn: () => apiFetch<AdminTransaction[]>("/api/admin/transactions"),
+    retry: false,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-10">
+        <Loader2 className="size-5 animate-spin text-primary" />
+        <span className="sr-only">Memuat…</span>
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        Gagal memuat transaksi.
+      </p>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        Belum ada transaksi.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {data.map((t) => (
+        <Card key={t.id} className="bg-card p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-medium">{t.type}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t.userEmail ?? "—"}
+                {t.therapistName ? ` • ${t.therapistName}` : ""}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {/* ponytail: therapistNet is null for unlock/package — no split, don't recompute */}
+                {t.therapistNet != null ? (
+                  <>
+                    Platform 40%: Rp{rupiah.format(t.amount - t.therapistNet)} · Therapist 60%:{" "}
+                    Rp{rupiah.format(t.therapistNet)}
+                  </>
+                ) : (
+                  "Platform 100%: Rp" + rupiah.format(t.amount)
+                )}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {new Date(t.createdAt).toLocaleString("id-ID")}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <p className="font-bold text-primary">Rp{rupiah.format(t.amount)}</p>
+              <Badge variant={t.status === "paid" ? "default" : "secondary"}>{t.status}</Badge>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function Admin() {
   const session = useQuery({ queryKey: ["session"], queryFn: getSession, retry: false });
-  const [tab, setTab] = useState<"therapists" | "bookings">("therapists");
+  const [tab, setTab] = useState<"therapists" | "bookings" | "transactions">("therapists");
 
   if (session.isLoading) {
     return (
@@ -397,11 +477,30 @@ export default function Admin() {
           >
             Bookings
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "transactions"}
+            onClick={() => setTab("transactions")}
+            className={
+              tab === "transactions"
+                ? "rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground"
+                : "rounded-full bg-card px-4 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-foreground/10"
+            }
+          >
+            Transaksi
+          </button>
         </div>
       </div>
 
       <div className="flex flex-col gap-4 px-5 pt-4">
-        {tab === "therapists" ? <TherapistsTab /> : <BookingsTab />}
+        {tab === "therapists" ? (
+          <TherapistsTab />
+        ) : tab === "bookings" ? (
+          <BookingsTab />
+        ) : (
+          <TransactionsTab />
+        )}
       </div>
     </main>
   );

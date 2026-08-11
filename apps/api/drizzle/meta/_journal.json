@@ -22,6 +22,27 @@
       "when": 1786412101991,
       "tag": "0002_complete_gravity",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786435588268,
+      "tag": "0003_chubby_beyonder",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786436125571,
+      "tag": "0004_busy_network",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786436502535,
+      "tag": "0005_clear_greymalkin",
+      "breakpoints": true
     }
   ]
 }

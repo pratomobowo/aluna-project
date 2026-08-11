@@ -1,6 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Check, Lightbulb, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Bell, Check, Lightbulb, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
@@ -27,6 +28,52 @@ export interface Package {
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" });
+}
+
+const NOTIF_KEY = "aluna-notif-optin";
+
+function NotificationOptIn() {
+  const [granted, setGranted] = useState(() => localStorage.getItem(NOTIF_KEY) === "granted");
+  const supported = typeof window !== "undefined" && "Notification" in window;
+
+  async function enable() {
+    if (!supported) return;
+    const perm = await Notification.requestPermission();
+    if (perm === "granted") {
+      localStorage.setItem(NOTIF_KEY, "granted");
+      setGranted(true);
+    } else {
+      localStorage.setItem(NOTIF_KEY, "denied");
+    }
+  }
+
+  if (!supported) return null;
+
+  return (
+    <section aria-label="Pengingat sesi" className="flex flex-col gap-3">
+      <div className="flex items-start gap-2.5 rounded-xl bg-card p-3.5 ring-1 ring-foreground/10">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Bell className="size-4" aria-hidden />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div>
+            <p className="text-sm font-semibold">Jangan sampai ketinggalan sesimu!</p>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Aktifkan pengingat sesi biar kami ingatkan mendekati jadwalmu.
+            </p>
+          </div>
+          {granted ? (
+            <p className="text-xs font-medium text-primary">Pengingat aktif</p>
+          ) : (
+            <Button size="sm" className="h-8 w-fit gap-1" onClick={enable}>
+              <Bell className="size-3.5" aria-hidden />
+              Aktifkan pengingat sesi
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export default function PaymentSuccess() {
@@ -159,6 +206,8 @@ export default function PaymentSuccess() {
           })}
         </div>
       </section>
+
+      <NotificationOptIn />
 
       <Button variant="ghost" className="h-11 w-full" onClick={() => navigate("/")}>
         Lewati untuk Sekarang
