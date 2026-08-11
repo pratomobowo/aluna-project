@@ -1,6 +1,29 @@
 import type { PgTable } from "drizzle-orm/pg-core";
+import { fileURLToPath } from "node:url";
+import { and, eq } from "drizzle-orm";
+import { computeAssessment } from "@aluna/shared";
+import { auth } from "../auth";
 import { db } from "./index";
-import { classes, communities, packages, rewards, schedules, therapists } from "./schema";
+import {
+  assessmentResponses,
+  assessmentResults,
+  bookings,
+  classes,
+  communities,
+  dailyTaskCompletions,
+  packages,
+  pointsTransactions,
+  rewards,
+  schedules,
+  therapists,
+  transactions,
+  unlocks,
+  users
+} from "./schema";
+
+const DEMO_EMAIL = "demo@aluna.app";
+const DEMO_PASSWORD = "demo12345";
+const DEMO_NAME = "Demo Aluna";
 
 const THERAPISTS = [
   {
@@ -142,7 +165,28 @@ function formatDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-async function seed() {
+function nextWeekday(targetDay: number): string {
+  const d = new Date();
+  const daysUntil = (targetDay - d.getDay() + 7) % 7 || 7;
+  d.setDate(d.getDate() + daysUntil);
+  return formatDate(d);
+}
+
+async function seedIfEmpty<T extends PgTable>(
+  table: T,
+  rows: T["$inferInsert"][],
+  label: string
+): Promise<void> {
+  const existing = await db.select().from(table).limit(1);
+  if (existing.length > 0) {
+    console.log(`${label} already seeded, skipping.`);
+    return;
+  }
+  const inserted = await db.insert(table).values(rows).returning();
+  console.log(`Seeded ${inserted.length} ${label}`);
+}
+
+async function seedTherapistsSchedulesPackages(): Promise<void> {
   const existing = await db.select({ id: therapists.id }).from(therapists).limit(1);
   if (existing.length > 0) {
     console.log("Therapists already exist — skipping therapist seed.");
@@ -176,45 +220,178 @@ async function seed() {
     await db.insert(schedules).values(scheduleValues);
   }
 
-  await db.insert(packages).values(PACKAGES);
+  await seedIfEmpty(packages, PACKAGES, "packages");
 
-  console.log(`Seeded ${inserted.length} therapists, ${scheduleValues.length} schedules, ${PACKAGES.length} packages`);
+  console.log(`Seeded ${inserted.length} therapists, ${scheduleValues.length} schedules`);
 }
 
-function nextWeekday(targetDay: number): string {
-  const d = new Date();
-  const daysUntil = (targetDay - d.getDay() + 7) % 7 || 7;
-  d.setDate(d.getDate() + daysUntil);
-  return formatDate(d);
-}
-
-async function seedIfEmpty<T extends PgTable>(
-  table: T,
-  rows: T["$inferInsert"][],
-  label: string
-): Promise<void> {
-  const existing = await db.select().from(table).limit(1);
-  if (existing.length > 0) {
-    console.log(`${label} already seeded, skipping.`);
-    return;
+async function getOrCreateDemoUser() {
+  const [existing] = await db.select().from(users).where(eq(users.email, DEMO_EMAIL)).limit(1);
+  if (existing) {
+    console.log(`Demo user already exists (${DEMO_EMAIL}), reusing.`);
+    return existing;
   }
-  const inserted = await db.insert(table).values(rows).returning();
-  console.log(`Seeded ${inserted.length} ${label}`);
+
+  console.log(`Creating demo user (${DEMO_EMAIL}) via better-auth signUpEmail...`);
+  try {
+    const res = await auth.api.signUpEmail({
+      body: { name: DEMO_NAME, email: DEMO_EMAIL, password: DEMO_PASSWORD }
+    });
+    console.log(`Demo user created: ${res.user.email}`);
+    return res.user;
+  } catch (err) {
+    // ponytail: race guard — another instance may have created it concurrently
+    const [user] = await db.select().from(users).where(eq(users.email, DEMO_EMAIL)).limit(1);
+    if (user) return user;
+    throw err;
+  }
 }
 
-seed()
-  .then(async () => {
-    await seedIfEmpty(classes, [
-      { ...CLASSES[0], date: nextWeekday(6), time: "10:00" },
-      { ...CLASSES[1], date: nextWeekday(0), time: "14:00" }
-    ], "classes");
-    await seedIfEmpty(communities, COMMUNITIES, "communities");
-    await seedIfEmpty(rewards, REWARDS, "rewards");
-    process.exit(0);
-  })
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+async function seedDemoUserData(): Promise<void> {
+  const user = await getOrCreateDemoUser();
+  const uid = user.id;
+
+  const [existingAssessment] = await db
+    .select({ id: assessmentResults.id })
+    .from(assessmentResults)
+    .where(eq(assessmentResults.userId, uid))
+    .limit(1);
+  if (existingAssessment) {
+    console.log("Demo assessment already exists, skipping.");
+  } else {
+    const answers = Array(10).fill(0) as number[];
+    const result = computeAssessment(answers);
+    await db.insert(assessmentResponses).values({ userId: uid, answers });
+    await db.insert(assessmentResults).values({ userId: uid, result, safetyTriggered: result.safetyTriggered });
+    console.log("Seeded demo assessment (10 zeros).");
+  }
+
+  const [existingUnlock] = await db.select().from(unlocks).where(eq(unlocks.userId, uid)).limit(1);
+  if (existingUnlock) {
+    console.log("Demo unlock already exists, skipping.");
+  } else {
+    await db.insert(unlocks).values({ userId: uid, paidAt: new Date() });
+    console.log("Seeded demo unlock.");
+  }
+
+  const [existingPoints] = await db
+    .select({ id: pointsTransactions.id })
+    .from(pointsTransactions)
+    .where(eq(pointsTransactions.userId, uid))
+    .limit(1);
+  if (existingPoints) {
+    console.log("Demo points already exist, skipping.");
+  } else {
+    await db.insert(pointsTransactions).values([
+      { userId: uid, amount: 10, reason: "daily_task" },
+      { userId: uid, amount: 10, reason: "daily_task" },
+      { userId: uid, amount: 10, reason: "daily_task" },
+      { userId: uid, amount: 20, reason: "bonus_roadmap" }
+    ]);
+    console.log("Seeded demo points (50 total).");
+  }
+
+  const [existingBooking] = await db
+    .select({ id: bookings.id })
+    .from(bookings)
+    .where(and(eq(bookings.userId, uid), eq(bookings.status, "confirmed")))
+    .limit(1);
+  if (existingBooking) {
+    console.log("Demo booking already exists, skipping.");
+  } else {
+    let [schedule] = await db
+      .select()
+      .from(schedules)
+      .where(eq(schedules.booked, false))
+      .orderBy(schedules.date, schedules.time)
+      .limit(1);
+    if (!schedule) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const [created] = await db
+        .insert(schedules)
+        .values({ therapistId: 1, date: formatDate(tomorrow), time: "09:00", mode: "online", booked: false })
+        .returning();
+      schedule = created;
+    }
+
+    const [therapist] = await db.select().from(therapists).where(eq(therapists.id, schedule.therapistId ?? 0)).limit(1);
+    const price = therapist?.price ?? 100000;
+
+    const booking = await db.transaction(async (tx) => {
+      const [claimed] = await tx
+        .update(schedules)
+        .set({ booked: true })
+        .where(and(eq(schedules.id, schedule.id), eq(schedules.booked, false)))
+        .returning();
+      if (!claimed) return null;
+      const [created] = await tx
+        .insert(bookings)
+        .values({
+          userId: uid,
+          therapistId: schedule.therapistId,
+          scheduleId: schedule.id,
+          mode: schedule.mode,
+          price,
+          status: "confirmed"
+        })
+        .returning();
+      await tx.insert(transactions).values({
+        userId: uid,
+        type: "session",
+        referenceId: created.id,
+        amount: price,
+        therapistId: schedule.therapistId,
+        therapistNet: Math.round(price * 0.6),
+        status: "paid"
+      });
+      return created;
+    });
+
+    if (booking) {
+      console.log(`Seeded demo booking (schedule ${schedule.id}, price ${price}) + paid transaction.`);
+    } else {
+      console.log("Demo booking slot taken, skipping.");
+    }
+  }
+
+  const today = formatDate(new Date());
+  const [existingCompletion] = await db
+    .select({ id: dailyTaskCompletions.id })
+    .from(dailyTaskCompletions)
+    .where(and(
+      eq(dailyTaskCompletions.userId, uid),
+      eq(dailyTaskCompletions.date, today),
+      eq(dailyTaskCompletions.taskId, "t1")
+    ))
+    .limit(1);
+  if (existingCompletion) {
+    console.log("Demo daily task already completed today, skipping.");
+  } else {
+    await db.insert(dailyTaskCompletions).values({ userId: uid, taskId: "t1", date: today, points: 10 });
+    console.log("Seeded demo daily task completion.");
+  }
+}
+
+export async function runSeed(): Promise<void> {
+  await seedTherapistsSchedulesPackages();
+  await seedIfEmpty(classes, [
+    { ...CLASSES[0], date: nextWeekday(6), time: "10:00" },
+    { ...CLASSES[1], date: nextWeekday(0), time: "14:00" }
+  ], "classes");
+  await seedIfEmpty(communities, COMMUNITIES, "communities");
+  await seedIfEmpty(rewards, REWARDS, "rewards");
+  await seedDemoUserData();
+}
+
+const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+if (isMain) {
+  runSeed()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+}
 
 // ponytail: package prices are draft, validate with Ka Lisa before prod

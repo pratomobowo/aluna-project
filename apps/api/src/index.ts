@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import "dotenv/config";
 import { auth } from "./auth";
+import { runSeed } from "./db/seed";
 import { assessmentRoutes } from "./routes/assessment";
 import { roadmapRoutes } from "./routes/roadmap";
 import { therapistRoutes } from "./routes/therapists";
@@ -44,4 +45,7 @@ if (process.env.NODE_ENV !== "test") {
   serve({ fetch: app.fetch, port }, (info) => {
     console.log(`aluna api listening on http://localhost:${info.port}`);
   });
+  if (process.env.SEED_ON_START !== "false") {
+    runSeed().catch((err) => console.error("[aluna] auto-seed failed:", err));
+  }
 }
