@@ -6,6 +6,7 @@ export interface AuthUser {
   email?: string;
   image?: string;
   isTherapist?: boolean;
+  createdAt?: string;
 }
 
 export interface SessionResponse {
