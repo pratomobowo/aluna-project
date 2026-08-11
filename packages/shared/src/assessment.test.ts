@@ -9,10 +9,19 @@ describe("computeAssessment", () => {
     expect(r.overall).toBe(0);
   });
 
-  it("flags safetyTriggered when Q30 > 0", () => {
+  it("does not flag safetyTriggered when no answers are high", () => {
     const answers = Array.from({ length: 30 }, () => 0);
     const r = computeAssessment(answers);
     expect(r.safetyTriggered).toBe(false);
+  });
+
+  it("returns overall 0 for empty answers (not NaN)", () => {
+    const r = computeAssessment([]);
+    expect(r.overall).toBe(0);
+    expect(r.safetyTriggered).toBe(false);
+    expect(r.label).toBe("Butuh Dukungan");
+    expect(r.primary).toBe("anxiety");
+    expect(r.dimensions).toHaveLength(7);
   });
 
   it("returns primary issue = highest dimension", () => {

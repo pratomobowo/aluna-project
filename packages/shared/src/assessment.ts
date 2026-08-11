@@ -65,12 +65,15 @@ export function computeAssessment(answers: number[]): AssessmentResult {
     return { dimension, points: points[dimension], max, percent };
   });
 
+  // Ties resolve to the first dimension in DIMENSIONS order.
   const primary = dimensions.reduce((a, b) =>
     b.percent > a.percent ? b : a).dimension;
 
   // Average only over scored dimensions (self_esteem has no questions in the mapping).
   const scored = dimensions.filter((d) => d.max > 0);
-  const average = scored.reduce((sum, d) => sum + d.percent, 0) / scored.length;
+  const average = scored.length === 0
+    ? 0
+    : scored.reduce((sum, d) => sum + d.percent, 0) / scored.length;
   const overall = round1(average / 10);
 
   const label = overall >= 7 ? "Baik"
