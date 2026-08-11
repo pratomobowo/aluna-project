@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Check, Compass, Flag, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +11,9 @@ interface JourneyMapProps {
   labels?: string[];
   className?: string;
 }
+
+const VIEW_W = 390;
+const VIEW_H = 430;
 
 const MILESTONES = [
   { x: 55, y: 398 },
@@ -28,6 +32,15 @@ const SEGMENTS = [
   { d: "M300 172 Q315 158 335 162", end: 6 },
 ];
 
+const DEFAULT_LABELS = [
+  "Mulai perjalanan",
+  "Kenali dirimu",
+  "Konseling pertama",
+  "Ritme harian baru",
+  "Bangun kebiasaan",
+  "Tujuan tercapai",
+];
+
 function pin(r: number, top: number) {
   return `M 0 0 C ${-r} ${top * 0.55} ${-r} ${top} 0 ${top} C ${r} ${top} ${r} ${top * 0.55} 0 0 Z`;
 }
@@ -38,17 +51,33 @@ export default function JourneyMap({
   labels,
   className,
 }: JourneyMapProps) {
+  const [active, setActive] = useState<number | null>(null);
+  const [hovered, setHovered] = useState<number | null>(null);
   const completed = new Set(done);
   for (let n = 1; n < current; n++) completed.add(n);
-  const currentLabel = labels?.[current - 1];
+
+  const allLabels = labels
+    ? MILESTONES.map((_, i) => labels[i] ?? DEFAULT_LABELS[i] ?? `Titik ${i + 1}`)
+    : DEFAULT_LABELS;
+  const currentLabel = allLabels[current - 1];
   const ariaLabel = currentLabel
     ? `Peta perjalananmu: langkah ${current} dari 6 — ${currentLabel}`
     : `Peta perjalananmu: langkah ${current} dari 6`;
 
+  // Posisi kartu "Kamu di sini" mengikuti pin current (koordinat → persen)
+  const currentM = MILESTONES[Math.min(current - 1, MILESTONES.length - 1)];
+  const cardLeft = `${Math.min(Math.max((currentM.x / VIEW_W) * 100, 4), 62)}%`;
+  const cardTop = `${Math.max((currentM.y / VIEW_H) * 100 - 11, 2)}%`;
+
+  function cycleActive() {
+    if (active == null) return;
+    setActive((a) => (a == null ? null : (a % MILESTONES.length) + 1));
+  }
+
   return (
     <div className={cn("relative overflow-hidden rounded-2xl", className)}>
       <svg
-        viewBox="0 0 390 430"
+        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         role="img"
         aria-label={ariaLabel}
         className="block size-full"
@@ -146,14 +175,31 @@ export default function JourneyMap({
           const isFinish = n === MILESTONES.length;
           const top = isCurrent ? -30 : -26;
           const iconCy = isCurrent ? top * 0.65 : top * 0.68;
+          const isActive = active === n || hovered === n;
 
           return (
-            <g key={n} transform={`translate(${m.x} ${m.y})`}>
+            <g
+              key={n}
+              transform={`translate(${m.x} ${m.y})`}
+              onClick={() => setActive((a) => (a === n ? null : n))}
+              onMouseEnter={() => setHovered(n)}
+              onMouseLeave={() => setHovered(null)}
+              className="cursor-pointer transition-transform duration-150 [&:hover]:scale-110"
+              role="button"
+              aria-label={`${isDone ? "Selesai: " : ""}${allLabels[n - 1] ?? `Titik ${n}`}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setActive((a) => (a === n ? null : n));
+                }
+              }}
+            >
               {isCurrent && (
                 <circle className="jm-pulse" cx="0" cy={iconCy} r="17" fill="var(--color-accent)" />
               )}
               <path
-                d={pin(isCurrent ? 15 : 12, top)}
+                d={pin(isCurrent || isActive ? 15 : 12, top)}
                 fill={
                   isCurrent
                     ? "var(--color-accent)"
@@ -219,20 +265,39 @@ export default function JourneyMap({
         })}
       </svg>
 
-      <div
-        className="pointer-events-none absolute left-5 top-[182px] flex items-center gap-2 rounded-xl bg-background/95 px-3 py-2 shadow-sm ring-1 ring-foreground/10"
-        aria-hidden
+      {/* Kartu "Kamu di sini" mengikuti pin current */}
+      <button
+        type="button"
+        onClick={cycleActive}
+        className="pointer-events-auto absolute flex items-center gap-2 rounded-xl bg-background/95 px-3 py-2 shadow-sm ring-1 ring-foreground/10 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        style={{ left: cardLeft, top: cardTop }}
+        aria-label="Kamu di sini — buka titik berikutnya"
       >
         <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Compass className="size-4" aria-hidden />
         </span>
-        <div>
+        <div className="text-left">
           <p className="text-xs font-bold">Kamu di sini</p>
           <p className="text-[10px] text-muted-foreground">
             Titik {current} · {currentLabel ?? "Perjalananmu"}
           </p>
         </div>
-      </div>
+      </button>
+
+      {/* Tooltip/bubble info titik yang dipilih */}
+      {active != null && (
+        <div
+          role="status"
+          className="pointer-events-none absolute left-1/2 top-3 z-10 w-[calc(100%-1.5rem)] -translate-x-1/2 rounded-xl bg-foreground px-4 py-3 text-foreground shadow-lg"
+        >
+          <p className="text-xs font-semibold text-primary-foreground">
+            {completed.has(active) ? "✓ Selesai" : active === current ? "Kamu di sini" : active === MILESTONES.length ? "Tujuan" : `Titik ${active}`}
+          </p>
+          <p className="mt-0.5 text-sm font-medium text-primary-foreground">
+            {allLabels[active - 1]}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
