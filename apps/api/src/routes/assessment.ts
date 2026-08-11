@@ -8,7 +8,7 @@ import { assessmentResponses, assessmentResults } from "../db/schema";
 import { currentUser } from "../lib/session";
 
 const submitSchema = z.object({
-  answers: z.array(z.number().min(0).max(3)).length(30)
+  answers: z.array(z.number().int().min(0).max(3)).length(30)
 });
 
 export const assessmentRoutes = new Hono();
