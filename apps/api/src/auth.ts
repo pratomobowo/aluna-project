@@ -27,5 +27,12 @@ export const auth = betterAuth({
       isTherapist: { type: "boolean", defaultValue: false }
     }
   },
-  trustedOrigins: (process.env.FRONTEND_URL ?? "").split(",")
+  trustedOrigins: (process.env.FRONTEND_URL ?? "").split(","),
+  advanced: {
+    cookiePrefix: "aluna",
+    useSecureCookies: true,
+    defaultCookieAttributes: {
+      sameSite: "none",
+    },
+  },
 });
