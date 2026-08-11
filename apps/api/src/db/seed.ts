@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import type { PgTable } from "drizzle-orm/pg-core";
 import { db } from "./index";
-import { packages, schedules, therapists } from "./schema";
+import { classes, communities, packages, rewards, schedules, therapists } from "./schema";
 
 const THERAPISTS = [
   {
@@ -61,6 +61,80 @@ const PACKAGES = [
   { name: "Paket 24 Sesi", sessions: 24, price: 3840000, discountPercent: 36 }
 ];
 
+const CLASSES = [
+  {
+    title: "Mindfulness untuk Pemula",
+    description: "Kelas pengenalan mindfulness untuk menenangkan pikiran dan mengurangi stress.",
+    mode: "online",
+    price: 0,
+    category: "Kelas",
+    icon: "Flower2"
+  },
+  {
+    title: "Journaling Workshop",
+    description: "Workshop menulis jurnal untuk memproses emosi dan melatih refleksi diri.",
+    mode: "offline",
+    price: 50000,
+    category: "Workshop",
+    icon: "NotebookPen"
+  }
+];
+
+const COMMUNITIES = [
+  {
+    name: "Dear Community",
+    description: "Safe space untuk berbagi cerita dan saling mendukung.",
+    memberCount: 2400,
+    schedule: "Terbuka",
+    icon: "Sprout"
+  },
+  {
+    name: "Support Group Anxiety",
+    description: "Komunitas pendukung untuk berbagi pengalaman mengelola kecemasan.",
+    memberCount: 340,
+    schedule: "Mingguan",
+    icon: "MessagesSquare"
+  }
+];
+
+const REWARDS = [
+  {
+    title: "Teh Chamomile (min. 50rb)",
+    description: "Potongan 15rb untuk teh relaksasi",
+    tag: "Katalog · Nutrisi",
+    points: 300,
+    icon: "Coffee"
+  },
+  {
+    title: "E-book Kelola Overthinking",
+    description: "Panduan digital dari psikolog",
+    tag: "Katalog · Digital",
+    points: 400,
+    icon: "BookOpen"
+  },
+  {
+    title: "Diskon 20rb sesi ke-2",
+    description: "Berlaku untuk booking berikutnya",
+    tag: "Diskon · Konseling",
+    points: 600,
+    icon: "Ticket"
+  },
+  {
+    title: "Kelas Healing grup gratis",
+    description: "Akses 1 kelas online",
+    tag: "Katalog · Kelas",
+    points: 1000,
+    icon: "Flower2"
+  },
+  {
+    title: "Diskon 50rb Healthy Food",
+    description: "Paket makanan sehat mingguan",
+    tag: "Diskon · Nutrisi",
+    points: 1500,
+    icon: "Salad"
+  }
+];
+
 function formatDate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -71,8 +145,8 @@ function formatDate(d: Date): string {
 async function seed() {
   const existing = await db.select({ id: therapists.id }).from(therapists).limit(1);
   if (existing.length > 0) {
-    console.log("Therapists already exist — already seeded, skipping.");
-    process.exit(0);
+    console.log("Therapists already exist — skipping therapist seed.");
+    return;
   }
 
   const inserted = await db.insert(therapists).values(THERAPISTS).returning();
@@ -105,11 +179,42 @@ async function seed() {
   await db.insert(packages).values(PACKAGES);
 
   console.log(`Seeded ${inserted.length} therapists, ${scheduleValues.length} schedules, ${PACKAGES.length} packages`);
-  process.exit(0);
 }
 
+function nextWeekday(targetDay: number): string {
+  const d = new Date();
+  const daysUntil = (targetDay - d.getDay() + 7) % 7 || 7;
+  d.setDate(d.getDate() + daysUntil);
+  return formatDate(d);
+}
+
+async function seedIfEmpty<T extends PgTable>(
+  table: T,
+  rows: T["$inferInsert"][],
+  label: string
+): Promise<void> {
+  const existing = await db.select().from(table).limit(1);
+  if (existing.length > 0) {
+    console.log(`${label} already seeded, skipping.`);
+    return;
+  }
+  const inserted = await db.insert(table).values(rows).returning();
+  console.log(`Seeded ${inserted.length} ${label}`);
+}
+
+seed()
+  .then(async () => {
+    await seedIfEmpty(classes, [
+      { ...CLASSES[0], date: nextWeekday(6), time: "10:00" },
+      { ...CLASSES[1], date: nextWeekday(0), time: "14:00" }
+    ], "classes");
+    await seedIfEmpty(communities, COMMUNITIES, "communities");
+    await seedIfEmpty(rewards, REWARDS, "rewards");
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+
 // ponytail: package prices are draft, validate with Ka Lisa before prod
-seed().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});

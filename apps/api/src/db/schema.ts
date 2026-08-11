@@ -189,3 +189,60 @@ export const journalEntries = pgTable(
     uniqueIndex("journal_entries_userId_date_idx").on(table.userId, table.date)
   ]
 );
+
+export const classes = pgTable("classes", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  date: text("date").notNull(),
+  time: text("time").notNull(),
+  mode: text("mode").notNull(),
+  price: integer("price").notNull().default(0),
+  category: text("category").notNull(),
+  icon: text("icon")
+});
+
+export const communities = pgTable("communities", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  memberCount: integer("member_count").notNull().default(0),
+  schedule: text("schedule"),
+  icon: text("icon")
+});
+
+export const rewards = pgTable("rewards", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  tag: text("tag").notNull(),
+  points: integer("points").notNull(),
+  icon: text("icon"),
+  active: boolean("active").notNull().default(true)
+});
+
+export const pointsTransactions = pgTable(
+  "points_transactions",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    amount: integer("amount").notNull(),
+    reason: text("reason").notNull(),
+    createdAt: timestamp("created_at").defaultNow()
+  },
+  (table) => [index("points_transactions_userId_idx").on(table.userId)]
+);
+
+export const redemptions = pgTable("redemptions", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  rewardId: integer("reward_id")
+    .notNull()
+    .references(() => rewards.id),
+  pointsSpent: integer("points_spent").notNull(),
+  createdAt: timestamp("created_at").defaultNow()
+});
