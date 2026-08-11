@@ -3,6 +3,9 @@ import { Toaster } from "@/components/ui/sonner";
 import SessionGuard from "@/components/SessionGuard";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import Assessment from "@/pages/Assessment";
+import Result from "@/pages/Result";
+import Safety from "@/pages/Safety";
 
 function Home() {
   return (
@@ -20,6 +23,9 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/assessment" element={<Assessment />} />
+        <Route path="/result" element={<Result />} />
+        <Route path="/safety" element={<Safety />} />
         <Route
           path="/"
           element={
