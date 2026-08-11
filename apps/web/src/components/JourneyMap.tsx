@@ -181,15 +181,11 @@ export default function JourneyMap({
           const iconCy = isCurrent ? top * 0.65 : top * 0.68;
 
           return (
-            <motion.g
+            <g
               key={n}
               transform={`translate(${m.x} ${m.y})`}
               onClick={() => setActive((a) => (a === n ? null : n))}
-              className="cursor-pointer [&:hover]:scale-110"
-              style={{ transformOrigin: "0px 0px" }}
-              initial={reduceMotion ? false : { scale: 0 }}
-              animate={{ scale: isSelected ? 1.15 : 1 }}
-              transition={{ type: "spring", stiffness: 260, damping: 18 }}
+              className="cursor-pointer transition-transform duration-150 [&:hover]:scale-110"
               role="button"
               aria-label={`${isDone ? "Selesai: " : ""}${allLabels[n - 1] ?? `Titik ${n}`}`}
               aria-expanded={isSelected}
@@ -268,7 +264,7 @@ export default function JourneyMap({
                   </text>
                 </>
               )}
-            </motion.g>
+            </g>
           );
         })}
       </svg>
