@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { Check, Coins, Coffee, NotebookPen, Sun } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DailyTask } from "@aluna/shared";
 
@@ -10,43 +9,104 @@ interface DailyTasksProps {
   className?: string;
 }
 
+const TASK_ICONS = [NotebookPen, Sun, Coffee];
+
+// ponytail: rotate daily by date seed; same task all day
 export default function DailyTasks({ pool, className }: DailyTasksProps) {
   const [done, setDone] = useState<string[]>([]);
 
   if (pool.length === 0) return null;
 
-  // ponytail: rotate daily by date seed; same task all day
-  const task = pool[new Date().getDate() % pool.length];
-  const active = done.includes(task.id);
+  const start = new Date().getDate() % pool.length;
+  const order = Array.from({ length: pool.length }, (_, i) => pool[(start + i) % pool.length]);
+  const activeIndex = done.length;
+  const active = order[activeIndex];
+  const earned = order.slice(0, activeIndex).reduce((sum, t) => sum + t.points, 0);
+  const allDone = activeIndex >= pool.length;
+  const peek1 = order[activeIndex + 1];
+  const peek2 = order[activeIndex + 2];
 
   return (
     <section className={cn("flex flex-col gap-3", className)} aria-label="Langkah kecil hari ini">
-      <div className="flex items-center justify-between">
-        <h2 className="font-serif text-lg">Langkah kecil hari ini</h2>
-        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-          {done.length}/{pool.length} selesai
-        </span>
+      <h2 className="font-serif text-lg">Langkah kecil hari ini</h2>
+
+      <div className="grid grid-cols-3 divide-x divide-border rounded-xl bg-card py-3 ring-1 ring-foreground/10">
+        <div className="px-2 text-center">
+          <p className="text-sm font-bold text-primary">{done.length}/{pool.length}</p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">Progress harian</p>
+        </div>
+        <div className="px-2 text-center">
+          <p className="text-sm font-bold text-primary">{done.length}/{pool.length}</p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">Task selesai</p>
+        </div>
+        <div className="flex items-start justify-center gap-1 px-2">
+          <Coins className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
+          <div className="text-center">
+            <p className="text-sm font-bold text-primary">{earned}</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">Poin hari ini</p>
+          </div>
+        </div>
       </div>
 
-      <Card className="bg-card">
-        <div className="flex items-center gap-4 px-4 py-4">
-          <div className="flex flex-1 flex-col gap-1">
-            <p className="font-medium">{task.title}</p>
-            <p className="text-xs text-muted-foreground">+{task.points} poin</p>
+      {allDone ? (
+        <Card className="bg-card">
+          <div className="flex flex-col items-center gap-2 px-6 py-8 text-center">
+            <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Check className="size-6" aria-hidden />
+            </span>
+            <p className="font-serif text-xl">Semua langkah selesai!</p>
+            <p className="text-xs text-muted-foreground">
+              Kamu mengumpulkan {earned} poin hari ini. Sampai jumpa besok.
+            </p>
           </div>
-          <Button
-            variant={active ? "secondary" : "default"}
-            size="sm"
-            className="gap-1.5"
-            disabled={active}
-            aria-label={active ? "Selesai" : `Tandai selesai: ${task.title}`}
-            onClick={() => setDone((prev) => [...prev, task.id])}
-          >
-            <CheckCircle2 className="size-4" aria-hidden />
-            {active ? "Selesai" : "Tandai"}
-          </Button>
+        </Card>
+      ) : (
+        <div className="relative mt-4 pb-1" aria-label="Tumpukan langkah harian">
+          {peek2 && <Card className="absolute inset-x-3 -top-4 rounded-xl bg-muted/70 ring-1 ring-foreground/5" aria-hidden />}
+          {peek1 && (
+            <Card className="absolute inset-x-1.5 -top-2 rounded-xl bg-card ring-1 ring-foreground/10" aria-hidden>
+              <div className="flex items-center gap-3 px-4 py-4 opacity-70">
+                <TaskIcon title={peek1.title} />
+                <p className="line-clamp-1 text-sm font-medium">{peek1.title}</p>
+              </div>
+            </Card>
+          )}
+          <Card className="relative bg-card ring-1 ring-foreground/10">
+            <div className="flex items-center gap-3 px-4 py-4">
+              <TaskIcon title={active.title} />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <p className="line-clamp-1 font-medium">{active.title}</p>
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+                    Refleksi
+                  </span>
+                  <span className="flex items-center gap-0.5">
+                    <Coins className="size-3" aria-hidden />
+                    +{active.points}
+                  </span>
+                  <span className="hidden min-[380px]:inline">Sebelum tidur</span>
+                </div>
+              </div>
+              <button
+                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
+                aria-label={`Tandai selesai: ${active.title}`}
+                onClick={() => setDone((prev) => [...prev, active.id])}
+              >
+                <Check className="size-5" aria-hidden />
+              </button>
+            </div>
+          </Card>
         </div>
-      </Card>
+      )}
     </section>
+  );
+}
+
+function TaskIcon({ title }: { title: string }) {
+  const Icon = TASK_ICONS[Math.abs([...title].reduce((a, c) => a + c.charCodeAt(0), 0)) % TASK_ICONS.length];
+  return (
+    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <Icon className="size-5" aria-hidden />
+    </span>
   );
 }
