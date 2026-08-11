@@ -55,6 +55,7 @@ interface RoadmapResponse {
   roadmap: RoadmapStep[];
   goal: Goal;
   unlockPrice?: number;
+  progress?: { completedSteps: number; totalSteps: number; current: number; percent: number };
 }
 
 interface Therapist {
@@ -178,11 +179,11 @@ export default function Home() {
   const loading = session.isLoading || roadmap.isLoading;
 
   const totalSteps = roadmap.data?.roadmap.length ?? 0;
-  const locked = roadmap.data?.locked;
-  const doneCount = locked ? 1 : 2;
-  const current = locked ? 2 : 3;
-  const doneSteps = locked ? [1] : [1, 2];
-  const percent = goal && totalSteps > 0 ? Math.round((doneCount / totalSteps) * 100) : 0;
+  const progress = roadmap.data?.progress;
+  const doneCount = progress?.completedSteps ?? 0;
+  const current = Math.min(progress?.current ?? 1, totalSteps || 1);
+  const doneSteps = Array.from({ length: doneCount }, (_, i) => i + 1);
+  const percent = progress?.percent ?? 0;
 
   const taskPool: DailyTask[] = goal
     ? personalizationFor(goal.id as Dimension).dailyTaskPool
