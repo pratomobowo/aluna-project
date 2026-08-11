@@ -1,7 +1,9 @@
-import { useState } from "react";
 import { Check, Coins, Coffee, NotebookPen, Sun } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
 import type { DailyTask } from "@aluna/shared";
 
 interface DailyTasksProps {
@@ -11,20 +13,61 @@ interface DailyTasksProps {
 
 const TASK_ICONS = [NotebookPen, Sun, Coffee];
 
+function todayLocal() {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
 // ponytail: rotate daily by date seed; same task all day
 export default function DailyTasks({ pool, className }: DailyTasksProps) {
-  const [done, setDone] = useState<string[]>([]);
+  const queryClient = useQueryClient();
+
+  const completions = useQuery({
+    queryKey: ["task-completions", todayLocal()],
+    queryFn: () =>
+      apiFetch<{ completions: { taskId: string; date: string; points: number }[] }>(
+        "/api/tasks/completions"
+      ),
+    retry: false,
+  });
+
+  const completeTask = useMutation({
+    mutationFn: (task: DailyTask) =>
+      apiFetch<{ ok: boolean; duplicate: boolean }>("/api/tasks/complete", {
+        method: "POST",
+        body: { taskId: task.id, points: task.points },
+      }),
+    onSuccess: async (res, task) => {
+      await queryClient.invalidateQueries({ queryKey: ["task-completions"] });
+      await queryClient.invalidateQueries({ queryKey: ["points"] });
+      if (!res.duplicate) toast.success(`+${task.points} poin! Langkah selesai`);
+    },
+    onError: () => toast.error("Gagal menyimpan. Coba lagi."),
+  });
 
   if (pool.length === 0) return null;
 
+  const today = todayLocal();
+  const doneIds = (completions.data?.completions ?? [])
+    .filter((c) => c.date === today)
+    .map((c) => c.taskId);
+
   const start = new Date().getDate() % pool.length;
   const order = Array.from({ length: pool.length }, (_, i) => pool[(start + i) % pool.length]);
-  const activeIndex = done.length;
+  const activeIndex = doneIds.length;
   const active = order[activeIndex];
-  const earned = order.slice(0, activeIndex).reduce((sum, t) => sum + t.points, 0);
+  const earned = order
+    .slice(0, activeIndex)
+    .reduce((sum, t) => sum + t.points, 0);
   const allDone = activeIndex >= pool.length;
   const peek1 = order[activeIndex + 1];
   const peek2 = order[activeIndex + 2];
+
+  function handleComplete() {
+    if (active && !completeTask.isPending) completeTask.mutate(active);
+  }
 
   return (
     <section className={cn("flex flex-col gap-3", className)} aria-label="Langkah kecil hari ini">
@@ -32,11 +75,11 @@ export default function DailyTasks({ pool, className }: DailyTasksProps) {
 
       <div className="grid grid-cols-3 divide-x divide-border rounded-xl bg-card py-3 ring-1 ring-foreground/10">
         <div className="px-2 text-center">
-          <p className="text-sm font-bold text-primary">{done.length}/{pool.length}</p>
+          <p className="text-sm font-bold text-primary">{doneIds.length}/{pool.length}</p>
           <p className="mt-0.5 text-[10px] text-muted-foreground">Progress harian</p>
         </div>
         <div className="px-2 text-center">
-          <p className="text-sm font-bold text-primary">{done.length}/{pool.length}</p>
+          <p className="text-sm font-bold text-primary">{doneIds.length}/{pool.length}</p>
           <p className="mt-0.5 text-[10px] text-muted-foreground">Task selesai</p>
         </div>
         <div className="flex items-start justify-center gap-1 px-2">
@@ -90,9 +133,14 @@ export default function DailyTasks({ pool, className }: DailyTasksProps) {
               <button
                 className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
                 aria-label={`Tandai selesai: ${active.title}`}
-                onClick={() => setDone((prev) => [...prev, active.id])}
+                disabled={completeTask.isPending}
+                onClick={handleComplete}
               >
-                <Check className="size-5" aria-hidden />
+                {completeTask.isPending ? (
+                  <Check className="size-5 opacity-40" aria-hidden />
+                ) : (
+                  <Check className="size-5" aria-hidden />
+                )}
               </button>
             </div>
           </Card>

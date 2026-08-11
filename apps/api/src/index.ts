@@ -15,6 +15,7 @@ import { classRoutes } from "./routes/classes";
 import { communityRoutes } from "./routes/communities";
 import { rewardRoutes } from "./routes/rewards";
 import { pointRoutes } from "./routes/points";
+import { taskRoutes } from "./routes/tasks";
 
 const app = new Hono();
 app.use("*", cors({ origin: process.env.FRONTEND_URL?.split(",") ?? "*", credentials: true }));
@@ -34,6 +35,7 @@ app.route("/api", classRoutes);
 app.route("/api", communityRoutes);
 app.route("/api", rewardRoutes);
 app.route("/api", pointRoutes);
+app.route("/api", taskRoutes);
 
 export default app;
 

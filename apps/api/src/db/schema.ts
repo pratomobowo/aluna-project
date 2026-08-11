@@ -235,6 +235,27 @@ export const pointsTransactions = pgTable(
   (table) => [index("points_transactions_userId_idx").on(table.userId)]
 );
 
+export const dailyTaskCompletions = pgTable(
+  "daily_task_completions",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    taskId: text("task_id").notNull(),
+    date: text("date").notNull(),
+    points: integer("points").notNull(),
+    createdAt: timestamp("created_at").defaultNow()
+  },
+  (table) => [
+    uniqueIndex("daily_task_completions_userId_date_taskId_idx").on(
+      table.userId,
+      table.date,
+      table.taskId
+    )
+  ]
+);
+
 export const redemptions = pgTable("redemptions", {
   id: serial("id").primaryKey(),
   userId: text("user_id")

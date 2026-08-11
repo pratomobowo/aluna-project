@@ -50,6 +50,13 @@
       "when": 1786437790092,
       "tag": "0006_special_omega_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786442596980,
+      "tag": "0007_remarkable_johnny_blaze",
+      "breakpoints": true
     }
   ]
 }
