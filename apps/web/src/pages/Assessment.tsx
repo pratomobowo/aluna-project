@@ -72,21 +72,6 @@ export default function Assessment() {
     }
   }
 
-  // ponytail: demo-only skip — fills all zeros, submits, goes straight home
-  async function handleSkip() {
-    const allZero = QUESTIONS.map(() => 0);
-    setSubmitting(true);
-    try {
-      await apiFetch<SubmitResponse>("/api/assessment/submit", {
-        method: "POST",
-        body: { answers: allZero },
-      });
-    } catch {
-      localStorage.setItem("aluna-pending-answers", JSON.stringify(allZero));
-    }
-    navigate("/");
-  }
-
   function handleNext() {
     if (question.dimension === "safety") {
       if ((selected ?? 0) > 0) {
@@ -186,14 +171,6 @@ export default function Assessment() {
             )}
             {submitting ? "Menyimpan…" : "Lanjut"}
           </Button>
-          <button
-            type="button"
-            onClick={handleSkip}
-            disabled={submitting}
-            className="mt-3 w-full text-center text-sm font-semibold text-muted-foreground transition-colors hover:text-primary disabled:opacity-40"
-          >
-            Lewati untuk demo →
-          </button>
         </div>
       </div>
     </main>

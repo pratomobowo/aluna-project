@@ -26,7 +26,7 @@ import Journal from "@/pages/Journal";
 import Profile from "@/pages/Profile";
 import { getSession } from "@/lib/auth";
 
-// ponytail: guest lands on assessment first; results saved after register
+// ponytail: guest lands on login; assessment offered via popup on the login page
 function RootGate() {
   const { data, isLoading } = useQuery({
     queryKey: ["session"],
@@ -44,7 +44,7 @@ function RootGate() {
   }
 
   if (data?.user) return <Home />;
-  return <Navigate to="/assessment" replace />;
+  return <Navigate to="/login" replace />;
 }
 
 export default function App() {
