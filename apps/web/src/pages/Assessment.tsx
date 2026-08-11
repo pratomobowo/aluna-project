@@ -54,19 +54,20 @@ export default function Assessment() {
     });
   }
 
-  async function submitAll() {
+  async function submitAll(overrideAnswers?: number[]) {
+    const payload = overrideAnswers ?? answers;
     setSubmitting(true);
     try {
       const res = await apiFetch<SubmitResponse>("/api/assessment/submit", {
         method: "POST",
-        body: { answers },
+        body: { answers: payload },
       });
       localStorage.removeItem("aluna-pending-answers");
       navigate("/result", { state: { result: res.result } });
     } catch {
       // Not logged in → save answers for after register, still show result.
-      localStorage.setItem("aluna-pending-answers", JSON.stringify(answers));
-      const local = computeAssessment(answers);
+      localStorage.setItem("aluna-pending-answers", JSON.stringify(payload));
+      const local = computeAssessment(payload);
       navigate("/result", { state: { result: local } });
     }
   }
@@ -91,7 +92,9 @@ export default function Assessment() {
       if ((selected ?? 0) > 0) {
         navigate("/safety");
       } else {
-        navigate("/result", { state: { result: computeAssessment([...answers, 0]) } });
+        const full = [...answers, 0];
+        // Submit (kalau login → API; kalau guest → simpan pending + result lokal)
+        submitAll(full);
       }
       return;
     }

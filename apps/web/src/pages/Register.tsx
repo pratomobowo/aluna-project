@@ -36,6 +36,8 @@ export default function Register() {
             body: { answers },
           });
           localStorage.removeItem("aluna-pending-answers");
+          // Roadmap sekarang ada — refresh biar Home tampil data
+          await queryClient.refetchQueries({ queryKey: ["roadmap"] });
         } catch {
           // ignore — answers stay in localStorage for the next submit
         }
