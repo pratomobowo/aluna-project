@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { and, desc, eq } from "drizzle-orm";
+import { UNLOCK_PRICE } from "@aluna/shared";
 import { db } from "../db";
 import { bookings, transactions, unlocks } from "../db/schema";
 import { currentUser } from "../lib/session";
@@ -9,7 +10,6 @@ import { currentUser } from "../lib/session";
 export const paymentRoutes = new Hono();
 
 // ponytail: mock payment, replace with Midtrans Snap integration later
-const UNLOCK_PRICE = 99000;
 
 const createSchema = z.object({
   type: z.enum(["unlock", "session", "package"]),
@@ -47,6 +47,8 @@ paymentRoutes.post("/payments/create", zValidator("json", createSchema), async (
 const completeSchema = z.object({ transactionId: z.number().int() });
 
 paymentRoutes.post("/payments/mock-complete", zValidator("json", completeSchema), async (c) => {
+  if (process.env.NODE_ENV === "production") return c.json({ error: "not_found" }, 404);
+
   const user = await currentUser(c);
   if (!user) return c.json({ error: "unauthorized" }, 401);
 
@@ -62,8 +64,7 @@ paymentRoutes.post("/payments/mock-complete", zValidator("json", completeSchema)
   await db.update(transactions).set({ status: "paid" }).where(eq(transactions.id, txn.id));
 
   if (txn.type === "unlock") {
-    const [existing] = await db.select().from(unlocks).where(eq(unlocks.userId, user.id));
-    if (!existing) await db.insert(unlocks).values({ userId: user.id, paidAt: new Date() });
+    await db.insert(unlocks).values({ userId: user.id, paidAt: new Date() }).onConflictDoNothing();
   } else if (txn.referenceId) {
     await db
       .update(bookings)

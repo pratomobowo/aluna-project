@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { bookings, packages, schedules, therapists } from "../db/schema";
 import { currentUser } from "../lib/session";
@@ -9,7 +9,6 @@ import { currentUser } from "../lib/session";
 export const bookingRoutes = new Hono();
 
 const bookingSchema = z.object({
-  therapistId: z.number().int(),
   scheduleId: z.number().int(),
   mode: z.enum(["online", "offline"]),
   packageId: z.number().int().optional()
@@ -26,13 +25,14 @@ bookingRoutes.post("/bookings", zValidator("json", bookingSchema), async (c) => 
   if (schedule.booked) return c.json({ error: "slot_taken" }, 409);
   if (schedule.mode !== body.mode) return c.json({ error: "mode_mismatch" }, 400);
 
-  const [therapist] = await db.select().from(therapists).where(eq(therapists.id, body.therapistId)).limit(1);
+  if (schedule.therapistId == null) return c.json({ error: "therapist_not_found" }, 404);
+  const [therapist] = await db.select().from(therapists).where(eq(therapists.id, schedule.therapistId)).limit(1);
   if (!therapist) return c.json({ error: "therapist_not_found" }, 404);
 
-  const [confirmedCount] = await db
+  const [activeCount] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(bookings)
-    .where(and(eq(bookings.userId, user.id), eq(bookings.status, "confirmed")));
+    .where(and(eq(bookings.userId, user.id), inArray(bookings.status, ["pending", "confirmed"])));
 
   let price: number;
   let packageId: number | null = body.packageId ?? null;
@@ -42,11 +42,11 @@ bookingRoutes.post("/bookings", zValidator("json", bookingSchema), async (c) => 
     const [pkgBookings] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(bookings)
-      .where(and(eq(bookings.userId, user.id), eq(bookings.packageId, packageId), eq(bookings.status, "confirmed")));
+      .where(and(eq(bookings.userId, user.id), eq(bookings.packageId, packageId), inArray(bookings.status, ["pending", "confirmed"])));
     const base = Math.round(pkg.price / pkg.sessions);
     price = pkgBookings.count === 0 ? Math.round(base * 0.5) : base;
   } else {
-    price = confirmedCount.count === 0 ? Math.round(therapist.price * 0.5) : therapist.price;
+    price = activeCount.count === 0 ? Math.round(therapist.price * 0.5) : therapist.price;
   }
 
   const booking = await db.transaction(async (tx) => {
@@ -60,7 +60,7 @@ bookingRoutes.post("/bookings", zValidator("json", bookingSchema), async (c) => 
       .insert(bookings)
       .values({
         userId: user.id,
-        therapistId: body.therapistId,
+        therapistId: schedule.therapistId,
         scheduleId: body.scheduleId,
         packageId,
         mode: body.mode,

@@ -1,13 +1,11 @@
 import { Hono } from "hono";
 import { and, desc, eq } from "drizzle-orm";
-import { personalizationFor, type AssessmentResult } from "@aluna/shared";
+import { personalizationFor, UNLOCK_PRICE, type AssessmentResult } from "@aluna/shared";
 import { db } from "../db";
 import { assessmentResults, transactions, unlocks } from "../db/schema";
 import { currentUser } from "../lib/session";
 
 export const roadmapRoutes = new Hono();
-
-const UNLOCK_PRICE = 99000;
 
 roadmapRoutes.get("/roadmap", async (c) => {
   const user = await currentUser(c);
