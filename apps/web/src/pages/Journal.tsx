@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Frown, Heart, Laugh, Meh, NotebookPen, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import BottomNav from "@/components/BottomNav";
+import { apiFetch } from "@/lib/api";
+import { getSession } from "@/lib/auth";
 
 interface Entry {
   date: string;
@@ -14,7 +17,6 @@ interface Entry {
 
 const KEY = "aluna-journal";
 
-// ponytail: journal v1.1 — localStorage only, belum ada backend
 const MOODS = [
   { value: 1, Icon: Frown, label: "Sulit" },
   { value: 2, Icon: Meh, label: "Biasa" },
@@ -44,6 +46,14 @@ function formatDate(key: string) {
   });
 }
 
+// API stores mood 0-4; UI picker is 1-5
+function apiToUi(mood: number) {
+  return mood + 1;
+}
+function uiToApi(mood: number) {
+  return mood - 1;
+}
+
 function load(): Entry[] {
   try {
     return JSON.parse(localStorage.getItem(KEY) ?? "[]");
@@ -52,14 +62,60 @@ function load(): Entry[] {
   }
 }
 
+async function fetchJournal(): Promise<Entry[]> {
+  try {
+    const res = await apiFetch<{ entries: { date: string; mood: number; note: string | null }[] }>("/api/journal");
+    return res.entries.map((e) => ({
+      date: e.date,
+      mood: apiToUi(e.mood),
+      note: e.note ?? "",
+    }));
+  } catch {
+    return load();
+  }
+}
+
 export default function Journal() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [mood, setMood] = useState<number>(3);
   const [note, setNote] = useState("");
+  const queryClient = useQueryClient();
+
+  const session = useQuery({ queryKey: ["session"], queryFn: getSession, retry: false });
+  const loggedIn = !!session.data?.user;
+  // ponytail: merge once per session so a logged-out writer's entries land on the server
+  const mergedRef = useRef(false);
+
+  const journalQuery = useQuery({
+    queryKey: ["journal"],
+    queryFn: fetchJournal,
+    enabled: loggedIn,
+    retry: false,
+  });
 
   useEffect(() => {
-    setEntries(load());
-  }, []);
+    setEntries(loggedIn ? (journalQuery.data ?? []) : load());
+  }, [loggedIn, journalQuery.data]);
+
+  useEffect(() => {
+    if (!loggedIn || mergedRef.current) return;
+    mergedRef.current = true;
+    (async () => {
+      try {
+        const server = await fetchJournal();
+        const serverDates = new Set(server.map((e) => e.date));
+        const local = load().filter((e) => !serverDates.has(e.date));
+        if (local.length === 0) return;
+        for (const e of local) {
+          await apiFetch("/api/journal", { method: "POST", body: { date: e.date, mood: uiToApi(e.mood), note: e.note } });
+        }
+        localStorage.removeItem(KEY);
+        await queryClient.invalidateQueries({ queryKey: ["journal"] });
+      } catch {
+        // ponytail: keep local entries, retry on next login
+      }
+    })();
+  }, [loggedIn, queryClient]);
 
   const today = todayKey();
   const todayEntry = entries.find((e) => e.date === today);
@@ -72,14 +128,33 @@ export default function Journal() {
     [entries, today]
   );
 
-  function save() {
+  async function save() {
     const next: Entry[] = [
       ...entries.filter((e) => e.date !== today),
       { date: today, mood, note: note.trim() },
     ];
+    setNote("");
+    const body = { date: today, mood: uiToApi(mood), note: note.trim() };
+
+    if (loggedIn) {
+      try {
+        await apiFetch("/api/journal", { method: "POST", body });
+        await queryClient.invalidateQueries({ queryKey: ["journal"] });
+        toast.success("Check-in tersimpan");
+      } catch (err) {
+        if (err instanceof Error && err.message === "unauthorized") {
+          localStorage.setItem(KEY, JSON.stringify(next));
+          setEntries(next);
+          toast("Masuk untuk menyimpan catatan di akunmu");
+        } else {
+          toast.error("Gagal menyimpan. Coba lagi.");
+        }
+      }
+      return;
+    }
+
     localStorage.setItem(KEY, JSON.stringify(next));
     setEntries(next);
-    setNote("");
     toast.success("Check-in tersimpan");
   }
 
