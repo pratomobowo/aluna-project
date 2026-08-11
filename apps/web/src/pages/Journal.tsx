@@ -5,7 +5,7 @@ import { Frown, Heart, Laugh, Meh, NotebookPen, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import BottomNav from "@/components/BottomNav";
+import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 
@@ -159,7 +159,8 @@ export default function Journal() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24">
+    <AppShell>
+      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24 lg:max-w-3xl">
       <header className="px-5 pb-4 pt-6">
         <h1 className="font-serif text-2xl">Journal</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -239,7 +240,7 @@ export default function Journal() {
         </section>
       </div>
 
-      <BottomNav />
     </main>
+    </AppShell>
   );
 }

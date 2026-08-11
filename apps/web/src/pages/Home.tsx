@@ -5,7 +5,6 @@ import {
   Coins,
   Flower2,
   Loader2,
-  LogOut,
   MessagesSquare,
   NotebookPen,
   Sparkles,
@@ -18,16 +17,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { apiFetch } from "@/lib/api";
-import { getSession, signOut } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { initials } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 import JourneyMap from "@/components/JourneyMap";
 import DailyTasks from "@/components/DailyTasks";
-import BottomNav from "@/components/BottomNav";
+import AppShell from "@/components/AppShell";
 import SessionReminder from "@/components/SessionReminder";
-import { useNavigate } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 interface Class {
   id: number;
@@ -102,38 +97,6 @@ function greeting() {
   return "Selamat malam";
 }
 
-function SignOutButton({ className }: { className?: string }) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const logout = useMutation({
-    mutationFn: signOut,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["session"] });
-      navigate("/login");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  return (
-    <button
-      className={cn(
-        "flex items-center justify-center gap-1.5 rounded-xl bg-card px-4 py-3 text-sm font-medium text-muted-foreground ring-1 ring-foreground/10 transition-colors hover:text-primary",
-        className
-      )}
-      aria-label="Keluar"
-      disabled={logout.isPending}
-      onClick={() => logout.mutate()}
-    >
-      {logout.isPending ? (
-        <Loader2 className="size-4 animate-spin" aria-hidden />
-      ) : (
-        <LogOut className="size-4" aria-hidden />
-      )}
-      Keluar
-    </button>
-  );
-}
-
 export default function Home() {
   const session = useQuery({ queryKey: ["session"], queryFn: getSession, retry: false });
   const roadmap = useQuery({
@@ -190,7 +153,8 @@ export default function Home() {
     : [];
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24">
+    <AppShell>
+      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24 lg:max-w-3xl">
       {loading ? (
         <div className="flex justify-center py-16">
           <Loader2 className="size-6 animate-spin text-primary" />
@@ -383,12 +347,9 @@ export default function Home() {
               })}
             </div>
           </section>
-
-          <SignOutButton className="w-full" />
         </div>
       )}
-
-      <BottomNav />
-    </main>
+      </main>
+    </AppShell>
   );
 }

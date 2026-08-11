@@ -6,7 +6,7 @@ import { ChevronDown, ChevronRight, Loader2, LogOut } from "lucide-react";
 import { getSession, signOut } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
 import { initials } from "@/lib/utils";
-import BottomNav from "@/components/BottomNav";
+import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -155,7 +155,8 @@ export default function Profile() {
     : undefined;
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24">
+    <AppShell>
+      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24 lg:max-w-3xl">
       <header className="px-5 pb-4 pt-6">
         <h1 className="font-serif text-2xl">Profil</h1>
       </header>
@@ -262,7 +263,7 @@ export default function Profile() {
         </section>
       </div>
 
-      <BottomNav />
     </main>
+    </AppShell>
   );
 }

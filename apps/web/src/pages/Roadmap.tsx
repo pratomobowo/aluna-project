@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
 import TopBar from "@/components/TopBar";
 import SessionReminder from "@/components/SessionReminder";
+import AppShell from "@/components/AppShell";
 
 interface RoadmapResponse {
   locked: boolean;
@@ -44,24 +45,26 @@ export default function Roadmap() {
 
   if (isError || !data) {
     return (
-      <main className="mx-auto min-h-dvh w-full max-w-md bg-background">
-        <TopBar />
-        <div className="flex flex-col gap-4 px-5 py-8">
-          <h1 className="font-serif text-3xl leading-tight">
-            Roadmap belum siap
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Kerjakan assessment dulu biar kami bisa susun rencana pemulihan yang
-            sesuai untukmu.
-          </p>
-          <Button className="h-11 gap-2" asChild>
-            <Link to="/assessment">
-              <Sparkles className="size-4" aria-hidden />
-              Mulai Assessment
-            </Link>
-          </Button>
-        </div>
-      </main>
+      <AppShell>
+        <main className="mx-auto min-h-dvh w-full max-w-md bg-background lg:max-w-3xl">
+          <TopBar />
+          <div className="flex flex-col gap-4 px-5 py-8">
+            <h1 className="font-serif text-3xl leading-tight">
+              Roadmap belum siap
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Kerjakan assessment dulu biar kami bisa susun rencana pemulihan yang
+              sesuai untukmu.
+            </p>
+            <Button className="h-11 gap-2" asChild>
+              <Link to="/assessment">
+                <Sparkles className="size-4" aria-hidden />
+                Mulai Assessment
+              </Link>
+            </Button>
+          </div>
+        </main>
+      </AppShell>
     );
   }
 
@@ -69,7 +72,8 @@ export default function Roadmap() {
   const visible = roadmap;
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-12">
+    <AppShell>
+      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-12 lg:max-w-3xl">
       <TopBar />
       <div className="flex flex-col gap-5 px-5 py-4">
         <SessionReminder />
@@ -173,7 +177,8 @@ export default function Roadmap() {
           </Card>
         )}
       </div>
-    </main>
+      </main>
+    </AppShell>
   );
 }
 

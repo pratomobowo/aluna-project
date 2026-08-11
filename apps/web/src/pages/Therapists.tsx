@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api";
 import { halfPrice, initials } from "@/lib/utils";
+import AppShell from "@/components/AppShell";
 
 export interface Therapist {
   id: number;
@@ -89,7 +90,8 @@ export default function Therapists() {
   }, [filtered, recommendedIds]);
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background pb-12">
+    <AppShell>
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background pb-12 lg:max-w-3xl">
       <header className="flex items-center gap-2 px-5 pb-2 pt-6">
         <Button variant="ghost" size="icon" className="size-8" asChild>
           <Link to="/" aria-label="Kembali">
@@ -147,7 +149,7 @@ export default function Therapists() {
           </p>
         </div>
       ) : (
-        <div className="mt-4 flex flex-col gap-3 px-5">
+        <div className="mt-4 grid grid-cols-1 gap-3 px-5 lg:grid-cols-2">
           {filtered.length === 0 && (
             <p className="py-8 text-center text-sm text-muted-foreground">
               Tidak ada therapist yang cocok.
@@ -174,7 +176,8 @@ export default function Therapists() {
           ))}
         </div>
       )}
-    </main>
+      </main>
+    </AppShell>
   );
 }
 

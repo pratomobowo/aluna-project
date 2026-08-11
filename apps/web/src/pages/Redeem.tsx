@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { apiFetch } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-import BottomNav from "@/components/BottomNav";
+import AppShell from "@/components/AppShell";
 
 type Tab = "Semua" | "Diskon" | "Katalog";
 
@@ -88,7 +88,8 @@ export default function Redeem() {
   });
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24">
+    <AppShell>
+      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24 lg:max-w-3xl">
       <header className="flex items-center gap-2 px-5 pb-3 pt-6">
         <Button variant="ghost" size="icon" className="size-8" asChild>
           <Link to="/" aria-label="Kembali">
@@ -148,7 +149,7 @@ export default function Redeem() {
           ))}
         </div>
 
-        <section aria-label="Daftar reward" className="flex flex-col gap-3">
+        <section aria-label="Daftar reward" className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {filtered.map((r) => {
             const Icon = rewardIcon(r.icon);
             const locked = balance < r.points;
@@ -204,7 +205,7 @@ export default function Redeem() {
         </p>
       </div>
 
-      <BottomNav />
     </main>
+    </AppShell>
   );
 }
