@@ -381,7 +381,13 @@ export async function runSeed(): Promise<void> {
   ], "classes");
   await seedIfEmpty(communities, COMMUNITIES, "communities");
   await seedIfEmpty(rewards, REWARDS, "rewards");
-  await seedDemoUserData();
+
+  // ponytail: demo account only when enabled — set SEED_DEMO=false in production
+  if (process.env.SEED_DEMO !== "false") {
+    await seedDemoUserData();
+  } else {
+    console.log("SEED_DEMO=false — skipping demo user.");
+  }
 }
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
