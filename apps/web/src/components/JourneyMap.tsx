@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Compass, Flag, MapPin } from "lucide-react";
+import { Check, Flag, MapPin, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface JourneyMapProps {
@@ -52,7 +52,6 @@ export default function JourneyMap({
   className,
 }: JourneyMapProps) {
   const [active, setActive] = useState<number | null>(null);
-  const [hovered, setHovered] = useState<number | null>(null);
   const completed = new Set(done);
   for (let n = 1; n < current; n++) completed.add(n);
 
@@ -64,15 +63,10 @@ export default function JourneyMap({
     ? `Peta perjalananmu: langkah ${current} dari 6 — ${currentLabel}`
     : `Peta perjalananmu: langkah ${current} dari 6`;
 
-  // Posisi kartu "Kamu di sini" mengikuti pin current (koordinat → persen)
-  const currentM = MILESTONES[Math.min(current - 1, MILESTONES.length - 1)];
-  const cardLeft = `${Math.min(Math.max((currentM.x / VIEW_W) * 100, 4), 62)}%`;
-  const cardTop = `${Math.max((currentM.y / VIEW_H) * 100 - 11, 2)}%`;
-
-  function cycleActive() {
-    if (active == null) return;
-    setActive((a) => (a == null ? null : (a % MILESTONES.length) + 1));
-  }
+  // Bubble info muncul tepat di atas pin yang dipilih (koordinat → persen)
+  const activeM = active != null ? MILESTONES[active - 1] : null;
+  const bubbleLeft = activeM ? `${(activeM.x / VIEW_W) * 100}%` : "50%";
+  const bubbleTop = activeM ? `${Math.max((activeM.y / VIEW_H) * 100 - 16, 2)}%` : "8%";
 
   return (
     <div className={cn("relative overflow-hidden rounded-2xl", className)}>
@@ -173,20 +167,20 @@ export default function JourneyMap({
           const isDone = completed.has(n);
           const isCurrent = n === current;
           const isFinish = n === MILESTONES.length;
-          const top = isCurrent ? -30 : -26;
+          const isSelected = active === n;
+          const big = isSelected || isCurrent;
+          const top = isCurrent ? -32 : -28;
           const iconCy = isCurrent ? top * 0.65 : top * 0.68;
-          const isActive = active === n || hovered === n;
 
           return (
             <g
               key={n}
               transform={`translate(${m.x} ${m.y})`}
               onClick={() => setActive((a) => (a === n ? null : n))}
-              onMouseEnter={() => setHovered(n)}
-              onMouseLeave={() => setHovered(null)}
               className="cursor-pointer transition-transform duration-150 [&:hover]:scale-110"
               role="button"
               aria-label={`${isDone ? "Selesai: " : ""}${allLabels[n - 1] ?? `Titik ${n}`}`}
+              aria-expanded={isSelected}
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -195,47 +189,49 @@ export default function JourneyMap({
                 }
               }}
             >
-              {isCurrent && (
-                <circle className="jm-pulse" cx="0" cy={iconCy} r="17" fill="var(--color-accent)" />
+              {isCurrent && !isSelected && (
+                <circle cx="0" cy={iconCy} r="13" fill="var(--color-accent)" opacity="0.35" />
               )}
               <path
-                d={pin(isCurrent || isActive ? 15 : 12, top)}
+                d={pin(big ? 16 : 13, top)}
                 fill={
-                  isCurrent
-                    ? "var(--color-accent)"
-                    : isDone
-                      ? "var(--color-primary)"
-                      : isFinish
-                        ? "var(--color-accent)"
-                        : "var(--color-muted)"
+                  isSelected
+                    ? "var(--color-primary)"
+                    : isCurrent
+                      ? "var(--color-accent)"
+                      : isDone
+                        ? "var(--color-primary)"
+                        : isFinish
+                          ? "var(--color-accent)"
+                          : "var(--color-muted)"
                 }
                 stroke={isDone || isCurrent || isFinish ? "none" : "var(--color-muted-foreground)"}
                 strokeOpacity={isDone || isCurrent || isFinish ? undefined : 0.4}
               />
               {isFinish ? (
                 <>
-                  <circle cx="0" cy={iconCy} r="6.5" fill="#fff" />
+                  <circle cx="0" cy={iconCy} r="7" fill="#fff" />
                   <Flag
-                    width={10}
-                    height={10}
-                    x={-5}
-                    y={iconCy - 5}
+                    width={11}
+                    height={11}
+                    x={-5.5}
+                    y={iconCy - 5.5}
                     strokeWidth={2.5}
                     className="text-foreground"
                   />
                 </>
               ) : isCurrent ? (
                 <MapPin
-                  width={18}
-                  height={18}
-                  x={-9}
-                  y={iconCy - 8}
+                  width={19}
+                  height={19}
+                  x={-9.5}
+                  y={iconCy - 8.5}
                   strokeWidth={2}
                   className="text-accent-foreground"
                 />
               ) : isDone ? (
                 <>
-                  <circle cx="0" cy={iconCy} r="7" fill="var(--color-primary-foreground)" />
+                  <circle cx="0" cy={iconCy} r="7.5" fill="var(--color-primary-foreground)" />
                   <Check
                     width={11}
                     height={11}
@@ -247,13 +243,13 @@ export default function JourneyMap({
                 </>
               ) : (
                 <>
-                  <circle cx="0" cy={iconCy} r="6.5" fill="#fff" />
+                  <circle cx="0" cy={iconCy} r="7" fill="#fff" />
                   <text
                     x="0"
-                    y={iconCy + 2.6}
+                    y={iconCy + 2.7}
                     textAnchor="middle"
-                    fontSize="8"
-                    fontWeight="600"
+                    fontSize="8.5"
+                    fontWeight="700"
                     fill="#93A099"
                   >
                     {n}
@@ -265,37 +261,26 @@ export default function JourneyMap({
         })}
       </svg>
 
-      {/* Kartu "Kamu di sini" mengikuti pin current */}
-      <button
-        type="button"
-        onClick={cycleActive}
-        className="pointer-events-auto absolute flex items-center gap-2 rounded-xl bg-background/95 px-3 py-2 shadow-sm ring-1 ring-foreground/10 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-        style={{ left: cardLeft, top: cardTop }}
-        aria-label="Kamu di sini — buka titik berikutnya"
-      >
-        <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <Compass className="size-4" aria-hidden />
-        </span>
-        <div className="text-left">
-          <p className="text-xs font-bold">Kamu di sini</p>
-          <p className="text-[10px] text-muted-foreground">
-            Titik {current} · {currentLabel ?? "Perjalananmu"}
-          </p>
-        </div>
-      </button>
-
-      {/* Tooltip/bubble info titik yang dipilih */}
-      {active != null && (
+      {/* Bubble info titik yang diklik — muncul tepat di atas pin, dengan tombol close */}
+      {active != null && activeM && (
         <div
-          role="status"
-          className="pointer-events-none absolute left-1/2 top-3 z-10 w-[calc(100%-1.5rem)] -translate-x-1/2 rounded-xl bg-foreground px-4 py-3 text-foreground shadow-lg"
+          role="dialog"
+          aria-label={`Info ${allLabels[active - 1]}`}
+          className="absolute z-20 -translate-x-1/2 rounded-xl bg-background p-3 shadow-lg ring-1 ring-foreground/10"
+          style={{ left: bubbleLeft, top: bubbleTop }}
         >
-          <p className="text-xs font-semibold text-primary-foreground">
-            {completed.has(active) ? "✓ Selesai" : active === current ? "Kamu di sini" : active === MILESTONES.length ? "Tujuan" : `Titik ${active}`}
+          <button
+            type="button"
+            onClick={() => setActive(null)}
+            className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="Tutup"
+          >
+            <X className="size-3.5" aria-hidden />
+          </button>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+            {completed.has(active) ? "Selesai" : active === current ? "Kamu di sini" : active === MILESTONES.length ? "Tujuan" : `Titik ${active}`}
           </p>
-          <p className="mt-0.5 text-sm font-medium text-primary-foreground">
-            {allLabels[active - 1]}
-          </p>
+          <p className="mt-0.5 pr-5 text-sm font-bold">{allLabels[active - 1]}</p>
         </div>
       )}
     </div>
