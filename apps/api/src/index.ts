@@ -2,9 +2,12 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import "dotenv/config";
+import { auth } from "./auth";
 
 const app = new Hono();
 app.use("*", cors({ origin: process.env.FRONTEND_URL?.split(",") ?? "*", credentials: true }));
+
+app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.get("/health", (c) => c.json({ ok: true }));
 
