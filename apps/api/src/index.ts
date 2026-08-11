@@ -4,6 +4,10 @@ import { serve } from "@hono/node-server";
 import "dotenv/config";
 import { auth } from "./auth";
 import { assessmentRoutes } from "./routes/assessment";
+import { roadmapRoutes } from "./routes/roadmap";
+import { therapistRoutes } from "./routes/therapists";
+import { bookingRoutes } from "./routes/booking";
+import { paymentRoutes } from "./routes/payments";
 
 const app = new Hono();
 app.use("*", cors({ origin: process.env.FRONTEND_URL?.split(",") ?? "*", credentials: true }));
@@ -12,6 +16,10 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.get("/health", (c) => c.json({ ok: true }));
 app.route("/api/assessment", assessmentRoutes);
+app.route("/api", roadmapRoutes);
+app.route("/api", therapistRoutes);
+app.route("/api", bookingRoutes);
+app.route("/api", paymentRoutes);
 
 export default app;
 

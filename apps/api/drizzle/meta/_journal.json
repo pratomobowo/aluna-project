@@ -15,6 +15,13 @@
       "when": 1786411009504,
       "tag": "0001_conscious_ezekiel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786412101991,
+      "tag": "0002_complete_gravity",
+      "breakpoints": true
     }
   ]
 }

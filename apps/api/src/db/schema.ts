@@ -137,7 +137,7 @@ export const bookings = pgTable("bookings", {
   id: serial("id").primaryKey(),
   userId: text("user_id").references(() => users.id),
   therapistId: integer("therapist_id").references(() => therapists.id),
-  scheduleId: integer("schedule_id").references(() => schedules.id),
+  scheduleId: integer("schedule_id").unique().references(() => schedules.id),
   packageId: integer("package_id"),
   mode: text("mode").notNull(),
   price: integer("price").notNull(),

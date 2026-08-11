@@ -1,0 +1,1 @@
+ALTER TABLE "bookings" ADD CONSTRAINT "bookings_schedule_id_unique" UNIQUE("schedule_id");
