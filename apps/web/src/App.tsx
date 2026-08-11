@@ -8,6 +8,8 @@ import Register from "@/pages/Register";
 import Assessment from "@/pages/Assessment";
 import Result from "@/pages/Result";
 import Safety from "@/pages/Safety";
+import Therapists from "@/pages/Therapists";
+import TherapistDetail from "@/pages/TherapistDetail";
 
 export default function App() {
   return (
@@ -23,6 +25,22 @@ export default function App() {
           element={
             <SessionGuard>
               <Roadmap />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/therapists"
+          element={
+            <SessionGuard>
+              <Therapists />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/therapists/:id"
+          element={
+            <SessionGuard>
+              <TherapistDetail />
             </SessionGuard>
           }
         />
