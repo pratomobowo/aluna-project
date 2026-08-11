@@ -160,7 +160,7 @@ export default function Journal() {
 
   return (
     <AppShell>
-      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24 lg:max-w-3xl">
+      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24 lg:max-w-none">
       <header className="px-5 pb-4 pt-6">
         <h1 className="font-serif text-2xl">Journal</h1>
         <p className="mt-1 text-sm text-muted-foreground">

@@ -154,7 +154,7 @@ export default function Home() {
 
   return (
     <AppShell>
-      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24 lg:max-w-3xl">
+      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24 lg:max-w-none">
       {loading ? (
         <div className="flex justify-center py-16">
           <Loader2 className="size-6 animate-spin text-primary" />
@@ -199,154 +199,162 @@ export default function Home() {
             </div>
           </header>
 
-          <Card className="bg-card">
-            <CardContent className="flex flex-col gap-3 py-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Menuju {goal?.label.toLowerCase()}
-                </p>
-                <p className="font-serif text-xl font-semibold text-primary">
-                  {percent}%
-                </p>
-              </div>
-              <Progress value={percent} aria-label={`Progres menuju ${goal?.label}`} />
-              <p className="text-xs text-muted-foreground">
-                Perjalanan minggu ke-3 · {doneCount} dari {totalSteps} langkah selesai
-              </p>
-            </CardContent>
-          </Card>
-
-          <section aria-label="Peta pemulihanmu">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="font-serif text-lg">Peta Pemulihanmu</h2>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                {doneCount} / {totalSteps} titik
-              </span>
-            </div>
-            <JourneyMap
-              current={current}
-              done={doneSteps}
-              labels={roadmap.data?.roadmap.map((s) => s.title)}
-            />
-          </section>
-
-          <section aria-label="Langkah berikutnya">
-            <Card className="bg-card">
-              <CardContent className="flex flex-col gap-3 py-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Titik perjalananmu sekarang
-                </p>
-                <h2 className="font-serif text-xl leading-snug">
-                  Konseling pertamamu
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Langkah besar berikutnya di petamu. Yuk jadwalkan — diskon 50%
-                  untuk sesi pertama.
-                </p>
-                <Button className="h-11 gap-2" asChild>
-                  <Link to="/therapists">
-                    <ArrowRight className="size-4" aria-hidden />
-                    Jadwalkan Sesi
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </section>
-
-          <DailyTasks pool={taskPool} />
-
-          <section aria-label="Therapist untukmu">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="font-serif text-lg">Therapist untukmu</h2>
-              <Link
-                to="/therapists"
-                className="flex items-center gap-1 text-xs font-semibold text-primary"
-              >
-                Lihat semua
-                <ArrowRight className="size-3.5" aria-hidden />
-              </Link>
-            </div>
-            <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2">
-              {therapists.data?.slice(0, 4).map((t) => (
-                <Link
-                  key={t.id}
-                  to={`/therapists/${t.id}`}
-                  className="w-40 shrink-0 rounded-xl bg-card ring-1 ring-foreground/10"
-                >
-                  <div className="flex flex-col gap-1.5 px-4 py-4">
-                    <span className="flex size-10 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
-                      {initials(t.name)}
-                    </span>
-                    <p className="mt-1 line-clamp-1 font-medium">{t.name}</p>
-                    <p className="line-clamp-2 text-xs text-muted-foreground">
-                      {t.specialties.join(" · ")}
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+            {/* Kolom kiri — perjalanan */}
+            <div className="flex flex-col gap-6">
+              <Card className="bg-card">
+                <CardContent className="flex flex-col gap-3 py-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Menuju {goal?.label.toLowerCase()}
                     </p>
-                    {t.rating && (
-                      <p className="flex items-center gap-1 text-xs font-semibold text-primary">
-                        <Star className="size-3" aria-hidden />
-                        {t.rating}
-                      </p>
-                    )}
+                    <p className="font-serif text-xl font-semibold text-primary">
+                      {percent}%
+                    </p>
                   </div>
-                </Link>
-              ))}
-            </div>
-          </section>
+                  <Progress value={percent} aria-label={`Progres menuju ${goal?.label}`} />
+                  <p className="text-xs text-muted-foreground">
+                    Perjalanan minggu ke-3 · {doneCount} dari {totalSteps} langkah selesai
+                  </p>
+                </CardContent>
+              </Card>
 
-          <section aria-label="Kelas dan event">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="font-serif text-lg">Kelas &amp; event</h2>
-              <span className="flex items-center gap-1 text-xs font-semibold text-primary">
-                Lihat semua
-                <ArrowRight className="size-3.5" aria-hidden />
-              </span>
-            </div>
-            <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2">
-              {classes.data?.map((c) => {
-                const Icon = classIcon(c.icon);
-                return (
-                  <div key={c.id} className="w-48 shrink-0 rounded-xl bg-card ring-1 ring-foreground/10">
-                    <div className="flex flex-col px-4 py-4">
-                      <span className="flex h-14 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <Icon className="size-7" aria-hidden />
-                      </span>
-                      <p className="mt-3 line-clamp-1 font-medium">{c.title}</p>
-                      <p className="text-xs text-muted-foreground">{formatClassMeta(c)}</p>
-                      <span className="mt-2 inline-flex self-start rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                        {formatClassTag(c)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
+              <section aria-label="Peta pemulihanmu">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="font-serif text-lg">Peta Pemulihanmu</h2>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    {doneCount} / {totalSteps} titik
+                  </span>
+                </div>
+                <JourneyMap
+                  current={current}
+                  done={doneSteps}
+                  labels={roadmap.data?.roadmap.map((s) => s.title)}
+                />
+              </section>
 
-          <section aria-label="Gabung komunitas">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="font-serif text-lg">Gabung komunitas</h2>
+              <section aria-label="Langkah berikutnya">
+                <Card className="bg-card">
+                  <CardContent className="flex flex-col gap-3 py-5">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Titik perjalananmu sekarang
+                    </p>
+                    <h2 className="font-serif text-xl leading-snug">
+                      Konseling pertamamu
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Langkah besar berikutnya di petamu. Yuk jadwalkan — diskon 50%
+                      untuk sesi pertama.
+                    </p>
+                    <Button className="h-11 gap-2" asChild>
+                      <Link to="/therapists">
+                        <ArrowRight className="size-4" aria-hidden />
+                        Jadwalkan Sesi
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </section>
+
+              <DailyTasks pool={taskPool} />
             </div>
-            <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2">
-              {communities.data?.map((com) => {
-                const Icon = classIcon(com.icon);
-                const meta = `${com.memberCount.toLocaleString("id-ID")} anggota${com.schedule ? ` · ${com.schedule}` : ""}`;
-                return (
-                  <div key={com.id} className="flex w-56 shrink-0 items-center gap-3 rounded-xl bg-card px-4 py-4 ring-1 ring-foreground/10">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Icon className="size-5" aria-hidden />
-                    </span>
-                    <div className="flex min-w-0 flex-col gap-0.5">
-                      <p className="truncate text-sm font-medium">{com.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">{meta}</p>
-                      <span className="mt-1 text-[10px] font-semibold text-primary">
-                        Bergabung
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+
+            {/* Kolom kanan — eksplorasi */}
+            <div className="flex flex-col gap-6">
+              <section aria-label="Therapist untukmu">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="font-serif text-lg">Therapist untukmu</h2>
+                  <Link
+                    to="/therapists"
+                    className="flex items-center gap-1 text-xs font-semibold text-primary"
+                  >
+                    Lihat semua
+                    <ArrowRight className="size-3.5" aria-hidden />
+                  </Link>
+                </div>
+                <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0">
+                  {therapists.data?.slice(0, 4).map((t) => (
+                    <Link
+                      key={t.id}
+                      to={`/therapists/${t.id}`}
+                      className="w-40 shrink-0 rounded-xl bg-card ring-1 ring-foreground/10 lg:w-auto"
+                    >
+                      <div className="flex flex-col gap-1.5 px-4 py-4">
+                        <span className="flex size-10 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                          {initials(t.name)}
+                        </span>
+                        <p className="mt-1 line-clamp-1 font-medium">{t.name}</p>
+                        <p className="line-clamp-2 text-xs text-muted-foreground">
+                          {t.specialties.join(" · ")}
+                        </p>
+                        {t.rating && (
+                          <p className="flex items-center gap-1 text-xs font-semibold text-primary">
+                            <Star className="size-3" aria-hidden />
+                            {t.rating}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+
+              <section aria-label="Kelas dan event">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="font-serif text-lg">Kelas &amp; event</h2>
+                  <span className="flex items-center gap-1 text-xs font-semibold text-primary">
+                    Lihat semua
+                    <ArrowRight className="size-3.5" aria-hidden />
+                  </span>
+                </div>
+                <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0">
+                  {classes.data?.map((c) => {
+                    const Icon = classIcon(c.icon);
+                    return (
+                      <div key={c.id} className="w-48 shrink-0 rounded-xl bg-card ring-1 ring-foreground/10 lg:w-auto">
+                        <div className="flex flex-col px-4 py-4">
+                          <span className="flex h-14 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <Icon className="size-7" aria-hidden />
+                          </span>
+                          <p className="mt-3 line-clamp-1 font-medium">{c.title}</p>
+                          <p className="text-xs text-muted-foreground">{formatClassMeta(c)}</p>
+                          <span className="mt-2 inline-flex self-start rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                            {formatClassTag(c)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section aria-label="Gabung komunitas">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="font-serif text-lg">Gabung komunitas</h2>
+                </div>
+                <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0">
+                  {communities.data?.map((com) => {
+                    const Icon = classIcon(com.icon);
+                    const meta = `${com.memberCount.toLocaleString("id-ID")} anggota${com.schedule ? ` · ${com.schedule}` : ""}`;
+                    return (
+                      <div key={com.id} className="flex w-56 shrink-0 items-center gap-3 rounded-xl bg-card px-4 py-4 ring-1 ring-foreground/10 lg:w-auto">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                          <Icon className="size-5" aria-hidden />
+                        </span>
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <p className="truncate text-sm font-medium">{com.name}</p>
+                          <p className="truncate text-xs text-muted-foreground">{meta}</p>
+                          <span className="mt-1 text-[10px] font-semibold text-primary">
+                            Bergabung
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
             </div>
-          </section>
+          </div>
         </div>
       )}
       </main>

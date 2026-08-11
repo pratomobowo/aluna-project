@@ -89,7 +89,7 @@ export default function Redeem() {
 
   return (
     <AppShell>
-      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24 lg:max-w-3xl">
+      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-24 lg:max-w-none">
       <header className="flex items-center gap-2 px-5 pb-3 pt-6">
         <Button variant="ghost" size="icon" className="size-8" asChild>
           <Link to="/" aria-label="Kembali">

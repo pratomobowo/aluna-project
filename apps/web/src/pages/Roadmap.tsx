@@ -46,7 +46,7 @@ export default function Roadmap() {
   if (isError || !data) {
     return (
       <AppShell>
-        <main className="mx-auto min-h-dvh w-full max-w-md bg-background lg:max-w-3xl">
+        <main className="mx-auto min-h-dvh w-full max-w-md bg-background lg:max-w-none">
           <TopBar />
           <div className="flex flex-col gap-4 px-5 py-8">
             <h1 className="font-serif text-3xl leading-tight">
@@ -73,7 +73,7 @@ export default function Roadmap() {
 
   return (
     <AppShell>
-      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-12 lg:max-w-3xl">
+      <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-12 lg:max-w-none">
       <TopBar />
       <div className="flex flex-col gap-5 px-5 py-4">
         <SessionReminder />

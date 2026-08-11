@@ -102,9 +102,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Content — narrow column on mobile, centered on desktop */}
+      {/* Content — narrow column on mobile, wide on desktop */}
       <div className="lg:pl-64">
-        <div className="mx-auto w-full max-w-md lg:max-w-3xl">
+        <div className="mx-auto w-full max-w-md px-0 lg:max-w-5xl lg:px-8 lg:py-8">
           {children}
         </div>
       </div>
