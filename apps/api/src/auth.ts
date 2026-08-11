@@ -6,6 +6,12 @@ import "dotenv/config";
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
+if (process.env.NODE_ENV === "production") {
+  if (!process.env.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET.length < 32) {
+    throw new Error("BETTER_AUTH_SECRET must be set and at least 32 characters in production");
+  }
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
   emailAndPassword: { enabled: true },
