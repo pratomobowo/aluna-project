@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
+  Coins,
   Flower2,
   Loader2,
+  LogOut,
   MessagesSquare,
   NotebookPen,
   Sparkles,
@@ -16,19 +18,37 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { apiFetch } from "@/lib/api";
-import { getSession } from "@/lib/auth";
+import { getSession, signOut } from "@/lib/auth";
 import { initials } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import JourneyMap from "@/components/JourneyMap";
 import DailyTasks from "@/components/DailyTasks";
 import BottomNav from "@/components/BottomNav";
 import SessionReminder from "@/components/SessionReminder";
-import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { signOut } from "@/lib/auth";
-import { Coins } from "lucide-react";
+
+interface Class {
+  id: number;
+  title: string;
+  description?: string;
+  date: string;
+  time: string;
+  mode: "online" | "offline";
+  price: number;
+  category?: string;
+  icon?: string;
+}
+
+interface Community {
+  id: number;
+  name: string;
+  description?: string;
+  memberCount: number;
+  schedule?: string;
+  icon?: string;
+}
 
 interface RoadmapResponse {
   locked: boolean;
@@ -46,26 +66,32 @@ interface Therapist {
   location: string | null;
 }
 
-// ponytail: sample data — tabel kelas belum masuk model data MVP
-const CLASSES = [
-  {
-    title: "Mindfulness untuk Pemula",
-    meta: "Sabtu, 5 Jul · 10.00",
-    tag: "Online · Gratis",
-    Icon: Flower2,
-  },
-  {
-    title: "Journaling Workshop",
-    meta: "Minggu, 6 Jul · 14.00",
-    tag: "Offline · 50k",
-    Icon: NotebookPen,
-  },
-];
+const CLASS_ICONS: Record<string, typeof Flower2> = {
+  Flower2,
+  NotebookPen,
+  Sprout,
+  MessagesSquare,
+  BookOpen: NotebookPen,
+};
 
-const COMMUNITIES = [
-  { name: "Dear Community", meta: "2.4k anggota · Safe space", action: "Bergabung", Icon: Sprout },
-  { name: "Support Group Anxiety", meta: "340 anggota · Mingguan", action: "Lihat", Icon: MessagesSquare },
-];
+function classIcon(icon?: string) {
+  return (icon && CLASS_ICONS[icon]) || Flower2;
+}
+
+function formatClassMeta(c: Class) {
+  const date = new Date(`${c.date}T00:00:00`).toLocaleDateString("id-ID", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+  return `${date} · ${c.time}`;
+}
+
+function formatClassTag(c: Class) {
+  const mode = c.mode === "online" ? "Online" : "Offline";
+  const price = c.price === 0 ? "Gratis" : "Rp " + c.price.toLocaleString("id-ID");
+  return `${mode} · ${price}`;
+}
 
 function greeting() {
   const h = new Date().getHours();
@@ -129,6 +155,25 @@ export default function Home() {
     retry: false,
   });
 
+  const classes = useQuery({
+    queryKey: ["classes"],
+    queryFn: () => apiFetch<Class[]>("/api/classes"),
+    retry: false,
+  });
+
+  const communities = useQuery({
+    queryKey: ["communities"],
+    queryFn: () => apiFetch<Community[]>("/api/communities"),
+    retry: false,
+  });
+
+  const points = useQuery({
+    queryKey: ["points"],
+    queryFn: () => apiFetch<{ balance: number }>("/api/points"),
+    enabled: !!session.data?.user,
+    retry: false,
+  });
+
   const name = session.data?.user?.name?.split(" ")[0];
   const loading = session.isLoading || roadmap.isLoading;
 
@@ -180,9 +225,8 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2.5">
               <span className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
-                {/* ponytail: poin sistem v1.1 — hardcode 0 */}
                 <Coins className="size-4" aria-hidden />
-                0
+                {points.data?.balance ?? 0}
               </span>
               <span className="flex size-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                 {initials(name, "A")}
@@ -293,20 +337,23 @@ export default function Home() {
               </span>
             </div>
             <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2">
-              {CLASSES.map(({ title, meta, tag, Icon }) => (
-                <div key={title} className="w-48 shrink-0 rounded-xl bg-card ring-1 ring-foreground/10">
-                  <div className="flex flex-col px-4 py-4">
-                    <span className="flex h-14 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Icon className="size-7" aria-hidden />
-                    </span>
-                    <p className="mt-3 line-clamp-1 font-medium">{title}</p>
-                    <p className="text-xs text-muted-foreground">{meta}</p>
-                    <span className="mt-2 inline-flex self-start rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                      {tag}
-                    </span>
+              {classes.data?.map((c) => {
+                const Icon = classIcon(c.icon);
+                return (
+                  <div key={c.id} className="w-48 shrink-0 rounded-xl bg-card ring-1 ring-foreground/10">
+                    <div className="flex flex-col px-4 py-4">
+                      <span className="flex h-14 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Icon className="size-7" aria-hidden />
+                      </span>
+                      <p className="mt-3 line-clamp-1 font-medium">{c.title}</p>
+                      <p className="text-xs text-muted-foreground">{formatClassMeta(c)}</p>
+                      <span className="mt-2 inline-flex self-start rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                        {formatClassTag(c)}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 
@@ -315,20 +362,24 @@ export default function Home() {
               <h2 className="font-serif text-lg">Gabung komunitas</h2>
             </div>
             <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2">
-              {COMMUNITIES.map(({ name, meta, action, Icon }) => (
-                <div key={name} className="flex w-56 shrink-0 items-center gap-3 rounded-xl bg-card px-4 py-4 ring-1 ring-foreground/10">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Icon className="size-5" aria-hidden />
-                  </span>
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <p className="truncate text-sm font-medium">{name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{meta}</p>
-                    <span className="mt-1 text-[10px] font-semibold text-primary">
-                      {action}
+              {communities.data?.map((com) => {
+                const Icon = classIcon(com.icon);
+                const meta = `${com.memberCount.toLocaleString("id-ID")} anggota${com.schedule ? ` · ${com.schedule}` : ""}`;
+                return (
+                  <div key={com.id} className="flex w-56 shrink-0 items-center gap-3 rounded-xl bg-card px-4 py-4 ring-1 ring-foreground/10">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Icon className="size-5" aria-hidden />
                     </span>
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <p className="truncate text-sm font-medium">{com.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{meta}</p>
+                      <span className="mt-1 text-[10px] font-semibold text-primary">
+                        Bergabung
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 

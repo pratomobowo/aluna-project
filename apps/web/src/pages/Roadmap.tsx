@@ -131,7 +131,7 @@ export default function Roadmap() {
             </Card>
 
             <UnlockPaywall
-              price={unlockPrice ?? 99000}
+              price={unlockPrice}
               goalLabel={goal.label}
             />
           </>
@@ -181,10 +181,10 @@ function UnlockPaywall({
   price,
   goalLabel,
 }: {
-  price: number;
+  price?: number;
   goalLabel: string;
 }) {
-  const formatted = new Intl.NumberFormat("id-ID").format(price);
+  const formatted = price != null ? new Intl.NumberFormat("id-ID").format(price) : null;
 
   return (
     <Card className="border-primary/30 bg-primary text-primary-foreground">
@@ -195,10 +195,12 @@ function UnlockPaywall({
             Buka seluruh perjalanan menuju {goalLabel.toLowerCase()}
           </h2>
         </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-xs opacity-80">Sekali bayar, akses seumur hidup</span>
-          <span className="font-serif text-3xl font-semibold">Rp{formatted}</span>
-        </div>
+        {formatted != null && (
+          <div className="flex items-baseline gap-2">
+            <span className="text-xs opacity-80">Sekali bayar, akses seumur hidup</span>
+            <span className="font-serif text-3xl font-semibold">Rp{formatted}</span>
+          </div>
+        )}
         <ul className="flex flex-col gap-2 text-sm">
           <li className="flex items-center gap-2">
             <Sparkles className="size-4 shrink-0" aria-hidden />
@@ -209,7 +211,7 @@ function UnlockPaywall({
             Voucher diskon konseling pertama
           </li>
         </ul>
-        <UnlockButton price={formatted} />
+        <UnlockButton price={formatted ?? ""} />
       </CardContent>
     </Card>
   );
@@ -254,7 +256,7 @@ function UnlockButton({ price }: { price: string }) {
       )}
       {status === "processing"
         ? "Memproses…"
-        : `Buka Roadmap Lengkap Rp${price}`}
+        : `Buka Roadmap Lengkap${price ? ` Rp${price}` : ""}`}
     </Button>
   );
 }
