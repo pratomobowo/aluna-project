@@ -65,10 +65,13 @@ export default function JourneyMap({
     ? `Peta perjalananmu: langkah ${current} dari 6 — ${currentLabel}`
     : `Peta perjalananmu: langkah ${current} dari 6`;
 
-  // Bubble info muncul tepat di atas pin yang dipilih (koordinat → persen)
   const activeM = active != null ? MILESTONES[active - 1] : null;
   const bubbleLeft = activeM ? `${(activeM.x / VIEW_W) * 100}%` : "50%";
-  const bubbleTop = activeM ? `${Math.max((activeM.y / VIEW_H) * 100 - 16, 2)}%` : "8%";
+  const bubbleTop = activeM ? `${Math.max((activeM.y / VIEW_H) * 100 - 18, 2)}%` : "8%";
+
+  const spring = { type: "spring", stiffness: 300, damping: 20 } as const;
+  const noMotion = reduceMotion ? false : undefined;
+  const exitMotion = reduceMotion ? undefined : { opacity: 0, scale: 0.9, y: 4 };
 
   return (
     <div className={cn("relative overflow-hidden rounded-2xl", className)}>
@@ -97,8 +100,13 @@ export default function JourneyMap({
           </radialGradient>
         </defs>
 
-        {/* Landscape dekoratif */}
-        <g aria-hidden>
+        {/* Landscape dekoratif — fade-in halus */}
+        <motion.g
+          aria-hidden
+          initial={noMotion ?? { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+        >
           <rect width="390" height="430" fill="url(#jm-sky)" />
           <circle cx="330" cy="58" r="78" fill="url(#jm-glow)" />
           <circle cx="330" cy="58" r="19" fill="#F4D06F" opacity="0.85" />
@@ -150,8 +158,9 @@ export default function JourneyMap({
             <circle cx="0" cy="-18" r="3" fill="#F7DE8A" />
             <path d="M3 -19 L14 -24 M3 -17 L14 -12" stroke="#F7DE8A" strokeWidth="1.5" opacity="0.8" />
           </g>
-        </g>
+        </motion.g>
 
+        {/* Jalur — tergambar halus */}
         {SEGMENTS.map((s, i) => {
           const reached = s.end <= current;
           return (
@@ -163,13 +172,14 @@ export default function JourneyMap({
               strokeLinecap="round"
               strokeDasharray="1 9"
               className={reached ? "stroke-primary" : "stroke-muted-foreground/40"}
-              initial={reduceMotion ? false : { pathLength: 0 }}
+              initial={noMotion ?? { pathLength: 0 }}
               animate={{ pathLength: 1 }}
-              transition={{ duration: 0.8, ease: "easeInOut" }}
+              transition={{ duration: 0.9, ease: "easeInOut", delay: i * 0.15 }}
             />
           );
         })}
 
+        {/* Pin — posisi via style x/y (bukan transform attr), spring scale-in */}
         {MILESTONES.map((m, i) => {
           const n = i + 1;
           const isDone = completed.has(n);
@@ -181,11 +191,15 @@ export default function JourneyMap({
           const iconCy = isCurrent ? top * 0.65 : top * 0.68;
 
           return (
-            <g
+            <motion.g
               key={n}
-              transform={`translate(${m.x} ${m.y})`}
+              style={{ x: m.x, y: m.y }}
+              initial={noMotion ?? { scale: 0 }}
+              animate={{ scale: isSelected ? 1.2 : 1 }}
+              whileTap={{ scale: 0.9 }}
+              transition={spring}
               onClick={() => setActive((a) => (a === n ? null : n))}
-              className="cursor-pointer transition-transform duration-150 [&:hover]:scale-110"
+              className="cursor-pointer"
               role="button"
               aria-label={`${isDone ? "Selesai: " : ""}${allLabels[n - 1] ?? `Titik ${n}`}`}
               aria-expanded={isSelected}
@@ -197,10 +211,18 @@ export default function JourneyMap({
                 }
               }}
             >
-              {isCurrent && !isSelected && (
-                <circle cx="0" cy={iconCy} r="13" fill="var(--color-accent)" opacity="0.35" />
+              {isCurrent && (
+                <motion.circle
+                  cx="0"
+                  cy={iconCy}
+                  r="13"
+                  fill="var(--color-accent)"
+                  opacity="0.35"
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
               )}
-              <path
+              <motion.path
                 d={pin(big ? 16 : 13, top)}
                 fill={
                   isSelected
@@ -215,6 +237,8 @@ export default function JourneyMap({
                 }
                 stroke={isDone || isCurrent || isFinish ? "none" : "var(--color-muted-foreground)"}
                 strokeOpacity={isDone || isCurrent || isFinish ? undefined : 0.4}
+                animate={isCurrent && !reduceMotion ? { y: [0, -3, 0] } : undefined}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
               />
               {isFinish ? (
                 <>
@@ -264,12 +288,12 @@ export default function JourneyMap({
                   </text>
                 </>
               )}
-            </g>
+            </motion.g>
           );
         })}
       </svg>
 
-      {/* Bubble info titik yang diklik — muncul tepat di atas pin, dengan tombol close */}
+      {/* Bubble info — fade/scale */}
       <AnimatePresence>
         {active != null && activeM && (
           <motion.div
@@ -278,9 +302,9 @@ export default function JourneyMap({
             aria-label={`Info ${allLabels[active - 1]}`}
             className="absolute z-20 -translate-x-1/2 rounded-xl bg-background p-3 shadow-lg ring-1 ring-foreground/10"
             style={{ left: bubbleLeft, top: bubbleTop }}
-            initial={reduceMotion ? false : { opacity: 0, scale: 0.9, y: 4 }}
+            initial={noMotion ?? { opacity: 0, scale: 0.9, y: 4 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={reduceMotion ? undefined : { opacity: 0, scale: 0.9, y: 4 }}
+            exit={exitMotion}
             transition={{ duration: 0.15 }}
           >
             <button
