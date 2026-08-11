@@ -16,6 +16,7 @@ import PaymentSuccess from "@/pages/PaymentSuccess";
 import PackageBooking from "@/pages/PackageBooking";
 import PackagePayment from "@/pages/PackagePayment";
 import PackageSuccess from "@/pages/PackageSuccess";
+import Admin from "@/pages/Admin";
 
 export default function App() {
   return (
@@ -95,6 +96,14 @@ export default function App() {
           element={
             <SessionGuard>
               <PackageSuccess />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <SessionGuard>
+              <Admin />
             </SessionGuard>
           }
         />

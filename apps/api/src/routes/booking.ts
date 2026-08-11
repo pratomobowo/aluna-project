@@ -3,8 +3,9 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
-import { bookings, packages, schedules, therapists } from "../db/schema";
+import { bookings, packages, schedules, therapists, users } from "../db/schema";
 import { currentUser } from "../lib/session";
+import { isAdmin } from "../lib/admin";
 
 export const bookingRoutes = new Hono();
 
@@ -97,6 +98,33 @@ bookingRoutes.get("/bookings", async (c) => {
     .from(bookings)
     .leftJoin(therapists, eq(therapists.id, bookings.therapistId))
     .where(eq(bookings.userId, user.id))
+    .orderBy(desc(bookings.createdAt));
+  return c.json(rows);
+});
+
+bookingRoutes.get("/admin/bookings", async (c) => {
+  if (!(await currentUser(c))) return c.json({ error: "unauthorized" }, 401);
+  if (!(await isAdmin(c))) return c.json({ error: "forbidden" }, 403);
+
+  const rows = await db
+    .select({
+      id: bookings.id,
+      userId: bookings.userId,
+      userEmail: users.email,
+      therapistId: bookings.therapistId,
+      therapistName: therapists.name,
+      scheduleId: bookings.scheduleId,
+      date: schedules.date,
+      time: schedules.time,
+      mode: bookings.mode,
+      price: bookings.price,
+      status: bookings.status,
+      createdAt: bookings.createdAt
+    })
+    .from(bookings)
+    .leftJoin(users, eq(users.id, bookings.userId))
+    .leftJoin(therapists, eq(therapists.id, bookings.therapistId))
+    .leftJoin(schedules, eq(schedules.id, bookings.scheduleId))
     .orderBy(desc(bookings.createdAt));
   return c.json(rows);
 });

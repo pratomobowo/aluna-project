@@ -70,7 +70,7 @@ export default function Home() {
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md bg-background pb-12">
-      <TopBar name={name} />
+      <TopBar name={name} isTherapist={session.data?.user?.isTherapist} />
 
       {loading ? (
         <div className="flex justify-center py-16">
