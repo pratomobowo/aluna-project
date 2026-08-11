@@ -7,15 +7,15 @@ export const DIMENSIONS: Dimension[] = [
   "sleep", "relationship", "self_esteem"
 ];
 
-// questionNumber → dimension. Q30 = safety (not scored).
+// questionNumber → dimension. Q10 = safety (not scored).
 export const QUESTION_DIMENSION: Record<number, Dimension | "safety"> = {
-  1:"anxiety", 2:"anxiety", 3:"anxiety", 4:"anxiety", 5:"anxiety",
-  6:"mood", 7:"mood", 8:"mood", 9:"mood", 10:"mood",
-  11:"stress", 12:"stress", 13:"stress", 14:"stress", 15:"stress",
-  16:"trauma", 17:"trauma", 18:"trauma", 19:"trauma", 20:"trauma",
-  21:"sleep", 22:"sleep", 23:"sleep", 24:"sleep", 25:"sleep",
-  26:"relationship", 27:"relationship", 28:"relationship", 29:"relationship",
-  30:"safety"
+  1:"anxiety", 2:"anxiety",
+  3:"mood", 4:"mood",
+  5:"stress", 6:"stress",
+  7:"trauma",
+  8:"sleep",
+  9:"relationship",
+  10:"safety"
 };
 
 export interface DimensionScore {
@@ -47,7 +47,7 @@ export function computeAssessment(answers: number[]): AssessmentResult {
   };
   let safetyTriggered = false;
 
-  answers.slice(0, 30).forEach((answer, i) => {
+  answers.slice(0, 10).forEach((answer, i) => {
     const value = clamp(answer);
     const q = i + 1;
     const dimension = QUESTION_DIMENSION[q];
