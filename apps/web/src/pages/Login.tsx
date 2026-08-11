@@ -92,6 +92,14 @@ export default function Login() {
                 {errors.password && (
                   <p className="text-xs text-destructive">{errors.password}</p>
                 )}
+                <div className="text-right">
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-medium text-primary underline underline-offset-4"
+                  >
+                    Lupa password?
+                  </Link>
+                </div>
               </div>
 
               <Button type="submit" disabled={login.isPending} className="h-11 w-full gap-2">

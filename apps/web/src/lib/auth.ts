@@ -46,3 +46,17 @@ export async function signOut() {
     body: {},
   });
 }
+
+export async function requestPasswordReset(email: string) {
+  return apiFetch("/api/auth/request-password-reset", {
+    method: "POST",
+    body: { email, redirectTo: `${window.location.origin}/reset-password` },
+  });
+}
+
+export async function resetPassword(newPassword: string, token: string) {
+  return apiFetch("/api/auth/reset-password", {
+    method: "POST",
+    body: { newPassword, token },
+  });
+}

@@ -7,6 +7,8 @@ import Home from "@/pages/Home";
 import Roadmap from "@/pages/Roadmap";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import Assessment from "@/pages/Assessment";
 import Result from "@/pages/Result";
 import Safety from "@/pages/Safety";
@@ -51,6 +53,8 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/assessment" element={<Assessment />} />
         <Route path="/result" element={<Result />} />
         <Route path="/safety" element={<Safety />} />
