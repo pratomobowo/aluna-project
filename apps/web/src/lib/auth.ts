@@ -31,10 +31,11 @@ export async function signUp(name: string, email: string, password: string) {
 }
 
 export async function signInSocial(provider: "google") {
-  return apiFetch<{ url?: string }>("/api/auth/sign-in/social", {
+  const res = await apiFetch<{ url?: string }>("/api/auth/sign-in/social", {
     method: "POST",
-    body: { provider, callbackURL: "/" },
+    body: { provider, callbackURL: `${window.location.origin}/` },
   });
+  if (res.url) window.location.href = res.url;
 }
 
 export async function signOut() {

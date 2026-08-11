@@ -5,17 +5,7 @@ import { Leaf, Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { signOut } from "@/lib/auth";
-
-function initials(name?: string) {
-  return (
-    name
-      ?.split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join("") || "A"
-  );
-}
+import { initials } from "@/lib/utils";
 
 export default function TopBar({ name }: { name?: string }) {
   const navigate = useNavigate();
@@ -39,7 +29,7 @@ export default function TopBar({ name }: { name?: string }) {
       <div className="flex items-center gap-2">
         <Avatar className="bg-primary text-primary-foreground">
           <AvatarFallback className="bg-primary text-primary-foreground">
-            {initials(name)}
+            {initials(name, "A")}
           </AvatarFallback>
         </Avatar>
         <Button

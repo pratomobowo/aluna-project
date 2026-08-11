@@ -4,20 +4,10 @@ import { ArrowLeft, ArrowRight, Check, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
+import { halfPrice, initials } from "@/lib/utils";
 import type { Therapist } from "./Therapists";
 
 const rupiah = new Intl.NumberFormat("id-ID");
-
-function initials(name: string) {
-  return (
-    name
-      ?.split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join("") || "T"
-  );
-}
 
 export default function TherapistDetail() {
   const { id } = useParams();
@@ -56,7 +46,7 @@ export default function TherapistDetail() {
   }
 
   const fullPrice = `Rp ${rupiah.format(therapist.price)}`;
-  const halfPrice = `Rp ${rupiah.format(therapist.price / 2)}`;
+  const halfPriceLabel = `Rp ${rupiah.format(halfPrice(therapist.price))}`;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background">
@@ -145,7 +135,7 @@ export default function TherapistDetail() {
               <s className="mr-2 text-[13px] font-normal text-muted-foreground">
                 {fullPrice}
               </s>
-              <span className="text-primary">{halfPrice}</span>
+              <span className="text-primary">{halfPriceLabel}</span>
             </p>
             <span className="rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-bold text-accent-foreground">
               50% off

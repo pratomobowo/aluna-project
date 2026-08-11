@@ -1,6 +1,5 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Building2, Video } from "lucide-react";
-
 export interface Schedule {
   id: number;
   therapistId: number;
@@ -18,6 +17,7 @@ export interface SlotPickerProps {
   onSelectDate: (date: string) => void;
   onSelectTime: (time: string | null) => void;
   onSelectMode: (mode: "online" | "offline") => void;
+  onValidChange?: (valid: boolean) => void;
 }
 
 const DAY_ABBR = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
@@ -30,6 +30,7 @@ export default function SlotPicker({
   onSelectDate,
   onSelectTime,
   onSelectMode,
+  onValidChange,
 }: SlotPickerProps) {
   const dates = useMemo(() => {
     const set = new Set(schedules.map((s) => s.date));
@@ -51,6 +52,24 @@ export default function SlotPicker({
         .sort((a, b) => a.time.localeCompare(b.time)),
     [schedules, selectedDate, mode],
   );
+
+  const selectedSlot = useMemo(
+    () =>
+      schedules.find(
+        (s) =>
+          s.date === selectedDate &&
+          s.time === selectedTime &&
+          s.mode === mode &&
+          !s.booked,
+      ),
+    [schedules, selectedDate, selectedTime, mode],
+  );
+
+  const valid = !!selectedSlot;
+
+  useEffect(() => {
+    onValidChange?.(valid);
+  }, [valid, onValidChange]);
 
   return (
     <div className="flex flex-col gap-5">

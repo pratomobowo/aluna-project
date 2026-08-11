@@ -4,6 +4,7 @@ import { ArrowRight, Check, Lightbulb, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
+import { initials } from "@/lib/utils";
 import type { Schedule } from "@/components/SlotPicker";
 
 const rupiah = new Intl.NumberFormat("id-ID");
@@ -26,17 +27,6 @@ export interface Package {
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" });
-}
-
-function initials(name: string) {
-  return (
-    name
-      ?.split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join("") || "T"
-  );
 }
 
 export default function PaymentSuccess() {

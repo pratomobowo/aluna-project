@@ -7,20 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import SlotPicker, { type Schedule } from "@/components/SlotPicker";
 import { apiFetch } from "@/lib/api";
+import { halfPrice, initials } from "@/lib/utils";
 import type { Therapist } from "./Therapists";
 
 const rupiah = new Intl.NumberFormat("id-ID");
-
-function initials(name: string) {
-  return (
-    name
-      ?.split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join("") || "T"
-  );
-}
 
 interface Booking {
   id: number;
@@ -36,6 +26,7 @@ export default function Booking() {
   const [mode, setMode] = useState<"online" | "offline">("online");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [slotValid, setSlotValid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const { data: therapist, isLoading, isError } = useQuery({
@@ -53,7 +44,7 @@ export default function Booking() {
   });
 
   async function createBooking() {
-    if (!selectedTime || !therapistId) return;
+    if (!slotValid) return;
     setSubmitting(true);
     try {
       const schedule = schedules?.find(
@@ -115,7 +106,7 @@ export default function Booking() {
             </div>
             <div className="text-right">
               <p className="text-sm font-bold text-primary">
-                Rp {rupiah.format(therapist.price / 2)}
+                Rp {rupiah.format(halfPrice(therapist.price))}
               </p>
               <p className="text-[11px] text-muted-foreground line-through">
                 Rp {rupiah.format(therapist.price)}
@@ -132,11 +123,12 @@ export default function Booking() {
           onSelectDate={setSelectedDate}
           onSelectTime={setSelectedTime}
           onSelectMode={setMode}
+          onValidChange={setSlotValid}
         />
 
         <Button
           className="h-12 w-full gap-2 text-base"
-          disabled={!selectedTime || submitting}
+          disabled={!slotValid || submitting}
           onClick={createBooking}
         >
           {submitting ? (

@@ -7,13 +7,13 @@ import {
   CloudRain,
   Flame,
   Heart,
+  Loader2,
   Lock,
   Moon,
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import {
-  computeAssessment,
   personalizationFor,
   type AssessmentResult,
   type Dimension,
@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSession } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 
 const DIMENSION_ICON: Record<Dimension, LucideIcon> = {
   anxiety: Brain,
@@ -109,13 +110,68 @@ export default function Result() {
     retry: false,
   });
 
-  const result = useMemo<AssessmentResult>(() => {
-    const fromState = (location.state as { result?: AssessmentResult } | null)?.result;
-    if (fromState) return fromState as AssessmentResult;
-    return computeAssessment([]);
-  }, [location.state]);
+  const fromState = (location.state as { result?: AssessmentResult } | null)?.result;
+
+  const fetched = useQuery({
+    queryKey: ["assessment-result"],
+    queryFn: () =>
+      apiFetch<{ result: AssessmentResult | null }>("/api/assessment/result"),
+    enabled: !fromState,
+    retry: false,
+  });
+
+  const result = useMemo<AssessmentResult | null>(() => {
+    if (fromState) return fromState;
+    return fetched.data?.result ?? null;
+  }, [fromState, fetched.data]);
 
   const loggedIn = !!submitted.data?.user;
+
+  if (!result) {
+    if (submitted.isLoading || fetched.isLoading) {
+      return (
+        <main className="flex min-h-dvh items-center justify-center bg-background">
+          <Loader2 className="size-6 animate-spin text-primary" />
+          <span className="sr-only">Memuat…</span>
+        </main>
+      );
+    }
+    if (fetched.error) {
+      return (
+        <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-4 bg-background px-5 py-8">
+          <h1 className="font-serif text-3xl leading-tight">Hasil tesmu sudah siap!</h1>
+          <p className="text-sm text-muted-foreground">
+            Masuk atau daftar biar hasil tesmu tersimpan dan bisa kamu akses kapan pun.
+          </p>
+          <p className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Lock className="size-3.5" aria-hidden />
+            Datamu aman dan privat.
+          </p>
+          <Button className="mt-2 h-11 w-full gap-2" asChild>
+            <Link to="/login">
+              <ArrowRight className="size-4" aria-hidden />
+              Masuk / Daftar — Lihat Hasilku
+            </Link>
+          </Button>
+        </main>
+      );
+    }
+    return (
+      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center justify-center gap-2 bg-background px-5 py-8 text-center">
+        <h1 className="font-serif text-2xl leading-tight">Belum ada hasil</h1>
+        <p className="text-sm text-muted-foreground">
+          Selesaikan assessment dulu ya.
+        </p>
+        <Button className="mt-2 h-11 w-full gap-2" asChild>
+          <Link to="/assessment">
+            <ArrowRight className="size-4" aria-hidden />
+            Mulai Assessment
+          </Link>
+        </Button>
+      </main>
+    );
+  }
+
   const { primary, overall, label } = result;
   const p = personalizationFor(primary);
 

@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn, signInSocial } from "@/lib/auth";
-
 export default function Login() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -27,9 +26,6 @@ export default function Login() {
 
   const google = useMutation({
     mutationFn: () => signInSocial("google"),
-    onSuccess: ({ url }) => {
-      if (url) window.location.href = url;
-    },
     onError: (err) => toast.error(err.message),
   });
 

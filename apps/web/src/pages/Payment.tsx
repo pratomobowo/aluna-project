@@ -6,6 +6,7 @@ import { ArrowLeft, Building2, CreditCard, Loader2, Lock, Smartphone } from "luc
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
+import { initials } from "@/lib/utils";
 import type { Schedule } from "@/components/SlotPicker";
 
 const rupiah = new Intl.NumberFormat("id-ID");
@@ -27,17 +28,6 @@ const PAY_METHODS = [
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" });
-}
-
-function initials(name: string) {
-  return (
-    name
-      ?.split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join("") || "T"
-  );
 }
 
 export default function Payment() {
@@ -163,7 +153,7 @@ export default function Payment() {
 
         <div className="flex flex-col gap-2">
           <p className="text-xs font-semibold text-muted-foreground">Metode Pembayaran</p>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2" role="group" aria-label="Metode pembayaran">
             {PAY_METHODS.map((m, i) => (
               <button
                 key={m.label}

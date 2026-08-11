@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api";
+import { halfPrice, initials } from "@/lib/utils";
 
 export interface Therapist {
   id: number;
@@ -29,17 +30,6 @@ const AVATAR_TONES = [
   "bg-chart-2 text-primary-foreground",
   "bg-chart-4 text-primary-foreground",
 ];
-
-function initials(name: string) {
-  return (
-    name
-      ?.split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join("") || "T"
-  );
-}
 
 export default function Therapists() {
   const { data, isLoading, isError } = useQuery({
@@ -94,12 +84,16 @@ export default function Therapists() {
           />
         </div>
 
-        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1" role="tablist" aria-label="Filter spesialisasi">
+        <div
+          className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1"
+          role="group"
+          aria-label="Filter spesialisasi"
+        >
           {[`Semua`, ...specialties].map((s) => (
             <button
               key={s}
-              role="tab"
-              aria-selected={specialty === s}
+              type="button"
+              aria-pressed={specialty === s}
               onClick={() => setSpecialty(s)}
               className={
                 specialty === s
@@ -163,7 +157,7 @@ export default function Therapists() {
                         Rp{rupiah.format(t.price)}
                       </s>
                       <span className="text-primary">
-                        Rp{rupiah.format(t.price / 2)}
+                        Rp{rupiah.format(halfPrice(t.price))}
                       </span>
                     </p>
                     <Button size="sm" className="h-8 gap-0.5" asChild>

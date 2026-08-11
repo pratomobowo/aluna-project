@@ -24,6 +24,7 @@ export default function PackageBooking() {
   const [mode, setMode] = useState<"online" | "offline">("online");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [slotValid, setSlotValid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const { data: packages, isLoading: pkgLoading } = useQuery({
@@ -48,7 +49,7 @@ export default function PackageBooking() {
   const pkg = packages?.find((p) => String(p.id) === packageId);
 
   async function createBooking() {
-    if (!selectedTime || !therapistId || !pkg) return;
+    if (!slotValid || !therapistId || !pkg) return;
     setSubmitting(true);
     try {
       const schedule = schedules?.find(
@@ -147,12 +148,13 @@ export default function PackageBooking() {
             onSelectDate={setSelectedDate}
             onSelectTime={setSelectedTime}
             onSelectMode={setMode}
+            onValidChange={setSlotValid}
           />
         )}
 
         <Button
           className="h-12 w-full gap-2 text-base"
-          disabled={!selectedTime || submitting}
+          disabled={!slotValid || submitting}
           onClick={createBooking}
         >
           {submitting ? (

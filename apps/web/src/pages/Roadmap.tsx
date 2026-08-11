@@ -229,7 +229,6 @@ function UnlockButton({ price }: { price: string }) {
       });
       await apiFetch("/api/unlock", { method: "POST", body: {} });
       // refetch roadmap: full version now unlocked
-      await fetchRoadmap();
       window.location.reload();
     } catch (err) {
       setStatus("error");
