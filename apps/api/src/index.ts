@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import "dotenv/config";
 import { auth } from "./auth";
+import { assessmentRoutes } from "./routes/assessment";
 
 const app = new Hono();
 app.use("*", cors({ origin: process.env.FRONTEND_URL?.split(",") ?? "*", credentials: true }));
@@ -10,6 +11,7 @@ app.use("*", cors({ origin: process.env.FRONTEND_URL?.split(",") ?? "*", credent
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.get("/health", (c) => c.json({ ok: true }));
+app.route("/api/assessment", assessmentRoutes);
 
 export default app;
 
