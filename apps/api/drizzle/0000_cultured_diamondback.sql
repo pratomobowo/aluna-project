@@ -79,7 +79,9 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"email" text,
 	"name" text,
 	"image" text,
+	"email_verified" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
