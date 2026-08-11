@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import JourneyMap from "@/components/JourneyMap";
 import DailyTasks from "@/components/DailyTasks";
 import BottomNav from "@/components/BottomNav";
+import SessionReminder from "@/components/SessionReminder";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -113,19 +114,24 @@ export default function Home() {
     queryFn: () => apiFetch<RoadmapResponse>("/api/roadmap"),
     retry: false,
   });
+  const noAssessment =
+    !roadmap.isLoading && (roadmap.isError || !roadmap.data);
+
+  const goal = roadmap.data?.goal;
+  const primary = goal?.id ?? null;
   const therapists = useQuery({
-    queryKey: ["therapists"],
-    queryFn: () => apiFetch<Therapist[]>("/api/therapists"),
+    queryKey: ["therapists", "dimension", primary],
+    queryFn: () =>
+      apiFetch<Therapist[]>(
+        primary ? `/api/therapists?dimension=${primary}` : "/api/therapists"
+      ),
+    enabled: !noAssessment,
     retry: false,
   });
 
   const name = session.data?.user?.name?.split(" ")[0];
   const loading = session.isLoading || roadmap.isLoading;
 
-  const noAssessment =
-    !roadmap.isLoading && (roadmap.isError || !roadmap.data);
-
-  const goal = roadmap.data?.goal;
   const totalSteps = roadmap.data?.roadmap.length ?? 0;
   const locked = roadmap.data?.locked;
   const doneCount = locked ? 1 : 2;
@@ -162,6 +168,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="flex flex-col gap-6 px-5 py-4">
+          <SessionReminder />
           <header className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-medium text-muted-foreground">

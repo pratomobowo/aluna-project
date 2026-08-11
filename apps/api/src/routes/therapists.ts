@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { arrayContains, asc, desc, eq } from "drizzle-orm";
+import { THERAPIST_KEYWORDS, DIMENSIONS, type Dimension } from "@aluna/shared";
 import { db } from "../db";
 import { schedules, therapists } from "../db/schema";
 import { currentUser } from "../lib/session";
@@ -31,10 +32,20 @@ async function requireAdmin(c: import("hono").Context) {
 therapistRoutes.get("/therapists", async (c) => {
   const specialty = c.req.query("specialty");
   const location = c.req.query("location");
+  const dimension = c.req.query("dimension");
+  if (dimension && !DIMENSIONS.includes(dimension as Dimension)) {
+    return c.json({ error: "invalid_dimension" }, 400);
+  }
   let q = db.select().from(therapists).orderBy(asc(therapists.id)).$dynamic();
   if (specialty) q = q.where(arrayContains(therapists.specialties, [specialty]));
   if (location) q = q.where(eq(therapists.location, location));
-  return c.json(await q);
+  let rows = await q;
+  if (dimension) {
+    const keywords = THERAPIST_KEYWORDS[dimension as Dimension];
+    // ponytail: fetch-all-then-filter in JS — therapist count is small, SQL overlap not worth it
+    rows = rows.filter((t) => t.specialties.some((s) => keywords.includes(s)));
+  }
+  return c.json(rows);
 });
 
 therapistRoutes.get("/therapists/:id", async (c) => {

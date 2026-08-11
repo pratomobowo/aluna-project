@@ -13,4 +13,11 @@ describe("personalizationFor", () => {
       expect(personalizationFor(d).goal.label).toBeTruthy();
     }
   });
+  it("every dimension has meaningful therapist keywords", () => {
+    const p = personalizationFor("anxiety");
+    expect(p.therapistKeywords).toEqual(["Anxiety", "CBT"]);
+    for (const d of ["anxiety","mood","stress","trauma","sleep","relationship","self_esteem"] as const) {
+      expect(personalizationFor(d).therapistKeywords.length).toBeGreaterThan(0);
+    }
+  });
 });

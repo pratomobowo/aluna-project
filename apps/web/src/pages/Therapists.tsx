@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronRight, Loader2, MapPin, Search, Star } from "lucide-react";
+import { ArrowLeft, ChevronRight, Loader2, MapPin, Search, Sparkles, Star } from "lucide-react";
+import type { AssessmentResult } from "@aluna/shared";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,20 @@ export default function Therapists() {
     retry: false,
   });
 
+  const assessment = useQuery({
+    queryKey: ["assessment-result"],
+    queryFn: () => apiFetch<{ result: AssessmentResult | null }>("/api/assessment/result"),
+    retry: false,
+  });
+
+  const primary = assessment.data?.result?.primary ?? null;
+  const recommended = useQuery({
+    queryKey: ["therapists", "dimension", primary],
+    queryFn: () => apiFetch<Therapist[]>(`/api/therapists?dimension=${primary}`),
+    enabled: !!primary,
+    retry: false,
+  });
+
   const [query, setQuery] = useState("");
   const [specialty, setSpecialty] = useState("Semua");
 
@@ -60,6 +75,18 @@ export default function Therapists() {
       return matchesSpecialty && matchesQuery;
     });
   }, [data, query, specialty]);
+
+  const recommendedIds = useMemo(
+    () => new Set((recommended.data ?? []).map((t) => t.id)),
+    [recommended.data]
+  );
+
+  const shown = useMemo(() => {
+    if (recommendedIds.size === 0) return { recommended: [], rest: filtered };
+    const rec = filtered.filter((t) => recommendedIds.has(t.id));
+    const rest = filtered.filter((t) => !recommendedIds.has(t.id));
+    return { recommended: rec, rest };
+  }, [filtered, recommendedIds]);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background pb-12">
@@ -126,53 +153,75 @@ export default function Therapists() {
               Tidak ada therapist yang cocok.
             </p>
           )}
-          {filtered.map((t, i) => (
-            <Card key={t.id} className="bg-card p-4">
-              <div className="flex gap-3">
-                <span
-                  className={`flex size-13 shrink-0 items-center justify-center rounded-full text-base font-semibold ${AVATAR_TONES[i % AVATAR_TONES.length]}`}
-                >
-                  {initials(t.name)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{t.name}</p>
-                  <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-                    {t.title} • {t.specialties.join(" & ")}
-                  </p>
-                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {t.rating && (
-                      <span className="inline-flex items-center gap-0.5 font-semibold text-foreground">
-                        <Star className="size-3.5 fill-accent text-accent" aria-hidden />
-                        {t.rating}
-                      </span>
-                    )}
-                    <span className="inline-flex items-center gap-0.5">
-                      <MapPin className="size-3.5" aria-hidden />
-                      {t.location === "Online" ? "Online" : t.location ?? "Online"}
-                    </span>
-                  </div>
-                  <div className="mt-2.5 flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold">
-                      <s className="mr-1.5 text-[11px] font-normal text-muted-foreground">
-                        Rp{rupiah.format(t.price)}
-                      </s>
-                      <span className="text-primary">
-                        Rp{rupiah.format(halfPrice(t.price))}
-                      </span>
-                    </p>
-                    <Button size="sm" className="h-8 gap-0.5" asChild>
-                      <Link to={`/therapists/${t.id}`}>
-                        Lihat Profil
-                        <ChevronRight className="size-3.5" aria-hidden />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
+          {shown.recommended.length > 0 && (
+            <>
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                <Sparkles className="size-3.5" aria-hidden />
+                Direkomendasikan untukmu
+              </span>
+              {shown.recommended.map((t, i) => (
+                <TherapistCard key={t.id} t={t} index={i} />
+              ))}
+              {shown.rest.length > 0 && (
+                <p className="mt-2 text-xs font-semibold text-muted-foreground">
+                  Semua therapist
+                </p>
+              )}
+            </>
+          )}
+          {shown.rest.map((t, i) => (
+            <TherapistCard key={t.id} t={t} index={i} />
           ))}
         </div>
       )}
     </main>
+  );
+}
+
+function TherapistCard({ t, index }: { t: Therapist; index: number }) {
+  return (
+    <Card className="bg-card p-4">
+      <div className="flex gap-3">
+        <span
+          className={`flex size-13 shrink-0 items-center justify-center rounded-full text-base font-semibold ${AVATAR_TONES[index % AVATAR_TONES.length]}`}
+        >
+          {initials(t.name)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">{t.name}</p>
+          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+            {t.title} • {t.specialties.join(" & ")}
+          </p>
+          <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+            {t.rating && (
+              <span className="inline-flex items-center gap-0.5 font-semibold text-foreground">
+                <Star className="size-3.5 fill-accent text-accent" aria-hidden />
+                {t.rating}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-0.5">
+              <MapPin className="size-3.5" aria-hidden />
+              {t.location === "Online" ? "Online" : t.location ?? "Online"}
+            </span>
+          </div>
+          <div className="mt-2.5 flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold">
+              <s className="mr-1.5 text-[11px] font-normal text-muted-foreground">
+                Rp{rupiah.format(t.price)}
+              </s>
+              <span className="text-primary">
+                Rp{rupiah.format(halfPrice(t.price))}
+              </span>
+            </p>
+            <Button size="sm" className="h-8 gap-0.5" asChild>
+              <Link to={`/therapists/${t.id}`}>
+                Lihat Profil
+                <ChevronRight className="size-3.5" aria-hidden />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }

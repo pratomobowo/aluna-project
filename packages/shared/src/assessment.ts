@@ -8,6 +8,13 @@ export const DIMENSIONS: Dimension[] = [
 ];
 
 // questionNumber → dimension. Q10 = safety (not scored).
+export const SCORING_CONFIG = {
+  scaleMax: 3,            // per answer max
+  goodThreshold: 7,       // overall >= this → "Baik"
+  attentionThreshold: 4,  // overall >= this → "Perlu Perhatian", else "Butuh Dukungan"
+  dimensionCount: 7,
+} as const;
+
 export const QUESTION_DIMENSION: Record<number, Dimension | "safety"> = {
   1:"anxiety", 2:"anxiety",
   3:"mood", 4:"mood",
@@ -33,7 +40,7 @@ export interface AssessmentResult {
   safetyTriggered: boolean; // Q30 answer > 0
 }
 
-const clamp = (n: number) => Math.min(3, Math.max(0, n));
+const clamp = (n: number) => Math.min(SCORING_CONFIG.scaleMax, Math.max(0, n));
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 export function computeAssessment(answers: number[]): AssessmentResult {
@@ -60,7 +67,7 @@ export function computeAssessment(answers: number[]): AssessmentResult {
   });
 
   const dimensions: DimensionScore[] = DIMENSIONS.map((dimension) => {
-    const max = counts[dimension] * 3;
+    const max = counts[dimension] * SCORING_CONFIG.scaleMax;
     const percent = max === 0 ? 0 : round1((points[dimension] / max) * 100);
     return { dimension, points: points[dimension], max, percent };
   });
@@ -76,8 +83,8 @@ export function computeAssessment(answers: number[]): AssessmentResult {
     : scored.reduce((sum, d) => sum + d.percent, 0) / scored.length;
   const overall = round1(average / 10);
 
-  const label = overall >= 7 ? "Baik"
-    : overall >= 4 ? "Perlu Perhatian"
+  const label = overall >= SCORING_CONFIG.goodThreshold ? "Baik"
+    : overall >= SCORING_CONFIG.attentionThreshold ? "Perlu Perhatian"
     : "Butuh Dukungan";
 
   return { overall, label, primary, dimensions, safetyTriggered };

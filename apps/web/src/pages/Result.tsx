@@ -53,15 +53,15 @@ function levelFor(percent: number): Level {
 }
 
 const LEVEL_COLOR: Record<Level, string> = {
-  Rendah: "bg-primary",
-  Sedang: "bg-orange-400",
-  Tinggi: "bg-red-500",
+  Rendah: "bg-calm",
+  Sedang: "bg-energy",
+  Tinggi: "bg-alert",
 };
 
 const LEVEL_TEXT: Record<Level, string> = {
-  Rendah: "text-primary",
-  Sedang: "text-orange-600",
-  Tinggi: "text-red-600",
+  Rendah: "text-calm-foreground",
+  Sedang: "text-energy-foreground",
+  Tinggi: "text-alert-foreground",
 };
 
 const NARRATIVE: Record<string, string> = {

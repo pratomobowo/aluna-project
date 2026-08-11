@@ -25,6 +25,16 @@ export const GOAL_LABEL: Record<Dimension, string> = {
   self_esteem: "Percaya Diri Lagi"
 };
 
+export const THERAPIST_KEYWORDS: Record<Dimension, string[]> = {
+  anxiety: ["Anxiety", "CBT"],
+  mood: ["Depresi", "Mood", "Depression"],
+  stress: ["Stress", "Burnout"],
+  trauma: ["Trauma", "PTSD"],
+  sleep: ["Tidur", "Sleep"],
+  relationship: ["Relasi", "Relationship"],
+  self_esteem: ["Self-esteem", "Harga Diri"]
+};
+
 export const DAILY_TASKS: Record<Dimension, DailyTask[]> = {
   anxiety: [
     { id: "t1", title: "Latihan napas 5 menit", points: 10 },
@@ -56,7 +66,7 @@ export function personalizationFor(primary: Dimension): Personalization {
     ],
     dailyTaskPool: DAILY_TASKS[primary],
     tag: primary === "anxiety" ? "#Overthinking" : "#ButuhDukungan",
-    therapistKeywords: [GOAL_LABEL[primary]],
+    therapistKeywords: THERAPIST_KEYWORDS[primary],
     pointsPerRoadmapStep: 20
   };
 }

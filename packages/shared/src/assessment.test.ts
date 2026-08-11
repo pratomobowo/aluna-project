@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeAssessment } from "./assessment";
+import { computeAssessment, SCORING_CONFIG } from "./assessment";
 
 describe("computeAssessment", () => {
   it("does not count Q10 (safety) in score", () => {
@@ -21,7 +21,7 @@ describe("computeAssessment", () => {
     expect(r.safetyTriggered).toBe(false);
     expect(r.label).toBe("Butuh Dukungan");
     expect(r.primary).toBe("anxiety");
-    expect(r.dimensions).toHaveLength(7);
+    expect(r.dimensions).toHaveLength(SCORING_CONFIG.dimensionCount);
   });
 
   it("returns primary issue = highest dimension", () => {
@@ -42,5 +42,11 @@ describe("computeAssessment", () => {
     const answers = Array.from({ length: 10 }, () => 0);
     const r = computeAssessment(answers);
     expect(r.label).toBe("Butuh Dukungan");
+  });
+
+  it("uses SCORING_CONFIG thresholds", () => {
+    const allMax = computeAssessment(Array.from({ length: 10 }, () => SCORING_CONFIG.scaleMax));
+    expect(allMax.overall).toBeCloseTo(10, 0);
+    expect(allMax.label).toBe("Baik");
   });
 });

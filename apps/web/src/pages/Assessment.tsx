@@ -15,14 +15,14 @@ export const OPTIONS = [
 ] as const;
 
 const DIM_TAG_STYLE: Record<QuestionDimension, string> = {
-  anxiety: "bg-primary/10 text-primary",
-  mood: "bg-sky-100 text-sky-800",
-  stress: "bg-orange-100 text-orange-800",
-  trauma: "bg-purple-100 text-purple-800",
-  sleep: "bg-indigo-100 text-indigo-800",
-  relationship: "bg-rose-100 text-rose-800",
-  self_esteem: "bg-yellow-100 text-yellow-800",
-  safety: "bg-red-100 text-red-800",
+  anxiety: "bg-calm text-calm-foreground",
+  mood: "bg-mind text-mind-foreground",
+  stress: "bg-energy text-energy-foreground",
+  trauma: "bg-warm text-warm-foreground",
+  sleep: "bg-calm text-calm-foreground",
+  relationship: "bg-warm text-warm-foreground",
+  self_esteem: "bg-energy text-energy-foreground",
+  safety: "bg-alert text-alert-foreground",
 };
 
 interface SubmitResponse {
