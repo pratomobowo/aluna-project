@@ -61,12 +61,29 @@ export default function Assessment() {
         method: "POST",
         body: { answers },
       });
+      localStorage.removeItem("aluna-pending-answers");
       navigate("/result", { state: { result: res.result } });
-    } catch (err) {
-      // Not logged in → compute locally so the result is still shown.
+    } catch {
+      // Not logged in → save answers for after register, still show result.
+      localStorage.setItem("aluna-pending-answers", JSON.stringify(answers));
       const local = computeAssessment(answers);
       navigate("/result", { state: { result: local } });
     }
+  }
+
+  // ponytail: demo-only skip — fills all zeros, submits, goes straight home
+  async function handleSkip() {
+    const allZero = QUESTIONS.map(() => 0);
+    setSubmitting(true);
+    try {
+      await apiFetch<SubmitResponse>("/api/assessment/submit", {
+        method: "POST",
+        body: { answers: allZero },
+      });
+    } catch {
+      localStorage.setItem("aluna-pending-answers", JSON.stringify(allZero));
+    }
+    navigate("/");
   }
 
   function handleNext() {
@@ -105,7 +122,7 @@ export default function Assessment() {
             <Progress value={((index + 1) / total) * 100} className="mt-2 h-1.5" />
           </div>
           <span className="text-xs font-semibold text-primary">
-            {index + 1}/{total}
+            {Math.round(((index + 1) / total) * 100)}%
           </span>
         </div>
       </header>
@@ -166,6 +183,14 @@ export default function Assessment() {
             )}
             {submitting ? "Menyimpan…" : "Lanjut"}
           </Button>
+          <button
+            type="button"
+            onClick={handleSkip}
+            disabled={submitting}
+            className="mt-3 w-full text-center text-sm font-semibold text-muted-foreground transition-colors hover:text-primary disabled:opacity-40"
+          >
+            Lewati untuk demo →
+          </button>
         </div>
       </div>
     </main>

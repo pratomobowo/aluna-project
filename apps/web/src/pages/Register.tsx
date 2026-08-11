@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUp } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -25,6 +26,18 @@ export default function Register() {
     mutationFn: () => signUp(name, email, password),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["session"] });
+      const pending = localStorage.getItem("aluna-pending-answers");
+      if (pending) {
+        try {
+          const answers = JSON.parse(pending) as number[];
+          await apiFetch("/api/assessment/submit", {
+            method: "POST",
+            body: { answers },
+          });
+        } catch {
+          // ignore — answers stay in localStorage for the next submit
+        }
+      }
       navigate("/");
     },
     onError: (err) => toast.error(err.message),

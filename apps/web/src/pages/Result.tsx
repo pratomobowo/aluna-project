@@ -177,77 +177,117 @@ export default function Result() {
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-sm bg-background px-5 py-8">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Hasil Tes — Overview
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Hasil Tes — Overview
+        </p>
+        {!loggedIn && (
+          <span className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            <Lock className="size-3" aria-hidden />
+            Pratinjau
+          </span>
+        )}
+      </div>
       <h1 className="mt-1 font-serif text-3xl leading-tight">Kondisi kamu saat ini</h1>
 
-      <Card className="mt-5 bg-card">
-        <CardContent className="flex items-center gap-4 py-5">
-          <div className="flex size-24 shrink-0 flex-col items-center justify-center rounded-full bg-primary/10">
-            <span className="font-serif text-3xl font-semibold text-primary">
-              {overall.toFixed(1)}
-            </span>
-            <span className="text-xs text-muted-foreground">/10</span>
-          </div>
-          <div>
-            <p className={`font-serif text-lg ${label === "Baik" ? "text-primary" : label === "Perlu Perhatian" ? "text-orange-600" : "text-red-600"}`}>
-              {label}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">{NARRATIVE[label]}</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="mt-5">
-        <ResultBars dimensions={result.dimensions} />
-      </div>
-
-      <Card className="mt-5 bg-card">
-        <CardContent className="flex flex-col gap-3 py-5">
-          <h2 className="font-serif text-lg">Ringkasan</h2>
-          <p className="text-sm text-muted-foreground">
-            Fokus utama saat ini adalah{" "}
-            <span className="font-medium text-foreground">{DIMENSION_LABEL[primary].toLowerCase()}</span>.{" "}
-            {NARRATIVE[label]}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              {p.tag}
-            </span>
-            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              {p.goal.label}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {!loggedIn ? (
-        <Card className="mt-5 bg-card">
-          <CardContent className="flex flex-col items-center gap-3 py-6 text-center">
-            <h2 className="font-serif text-xl">Hasil tesmu sudah siap!</h2>
-            <p className="text-sm text-muted-foreground">
-              Masuk atau daftar biar hasil tesmu tersimpan dan bisa kamu akses kapan pun.
-            </p>
-            <p className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Lock className="size-3.5" aria-hidden />
-              Datamu aman dan privat.
-            </p>
-            <Button className="mt-2 h-11 w-full gap-2" asChild>
-              <Link to="/login">
-                <ArrowRight className="size-4" aria-hidden />
-                Masuk / Daftar — Lihat Hasilku
-              </Link>
-            </Button>
+      <div className="mt-6 flex flex-col gap-5">
+        <Card className="bg-card">
+          <CardContent className="flex items-center gap-4 py-5">
+            <div className="flex size-24 shrink-0 flex-col items-center justify-center rounded-full bg-primary/10">
+              <span className="font-serif text-3xl font-semibold text-primary">
+                {overall.toFixed(1)}
+              </span>
+              <span className="text-xs text-muted-foreground">/10</span>
+            </div>
+            <div>
+              <p className={`font-serif text-lg ${label === "Baik" ? "text-primary" : label === "Perlu Perhatian" ? "text-orange-600" : "text-red-600"}`}>
+                {label}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">{NARRATIVE[label]}</p>
+            </div>
           </CardContent>
         </Card>
+
+        <ResultBars dimensions={result.dimensions} />
+
+        <Card className="bg-card">
+          <CardContent className="flex flex-col gap-4 py-5">
+          <h2 className="font-serif text-lg">Ringkasan &amp; Rekomendasi</h2>
+          {loggedIn ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Fokus utama saat ini adalah{" "}
+                <span className="font-medium text-foreground">{DIMENSION_LABEL[primary].toLowerCase()}</span>.{" "}
+                {NARRATIVE[label]}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                  {p.tag}
+                </span>
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                  {p.goal.label}
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="relative overflow-hidden rounded-xl">
+              <div className="flex flex-col gap-3 blur-[6px] select-none" aria-hidden>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Fokus utama saat ini adalah{" "}
+                  <span className="font-medium text-foreground">{DIMENSION_LABEL[primary].toLowerCase()}</span>.{" "}
+                  {NARRATIVE[label]}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    {p.tag}
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    {p.goal.label}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="h-8 w-full rounded-lg bg-muted" />
+                  <div className="h-8 w-full rounded-lg bg-muted" />
+                </div>
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/30 px-4 text-center">
+                <span className="flex size-10 items-center justify-center rounded-full bg-card shadow-sm ring-1 ring-foreground/10">
+                  <Lock className="size-5 text-primary" aria-hidden />
+                </span>
+                <p className="text-sm font-medium">Ringkasan &amp; rekomendasi personalmu masih terkunci.</p>
+                <p className="text-xs text-muted-foreground">
+                  Daftar gratis untuk membuka peta pemulihan yang dibuat khusus untukmu. Datamu aman dan privat.
+                </p>
+                <Button className="mt-1 h-11 w-full gap-2" asChild>
+                  <Link to="/register">
+                    <ArrowRight className="size-4" aria-hidden />
+                    Daftar &amp; Lihat Semuanya
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+        </Card>
+      </div>
+
+      {!loggedIn ? (
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Sudah punya akun?{" "}
+          <Link to="/login" className="font-medium text-primary underline underline-offset-4">
+            Masuk
+          </Link>{" "}
+          untuk melihat hasilmu.
+        </p>
       ) : (
-        <Button className="mt-5 h-12 w-full gap-2" asChild>
-          <Link to="/">
-            <ArrowRight className="size-4" aria-hidden />
-            Lihat Roadmap Kamu
-          </Link>
-        </Button>
+        <div className="mt-6">
+          <Button className="h-12 w-full gap-2" asChild>
+            <Link to="/">
+              <ArrowRight className="size-4" aria-hidden />
+              Lihat Roadmap Kamu
+            </Link>
+          </Button>
+        </div>
       )}
     </main>
   );

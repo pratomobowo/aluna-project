@@ -1,4 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import SessionGuard from "@/components/SessionGuard";
 import Home from "@/pages/Home";
@@ -17,6 +19,31 @@ import PackageBooking from "@/pages/PackageBooking";
 import PackagePayment from "@/pages/PackagePayment";
 import PackageSuccess from "@/pages/PackageSuccess";
 import Admin from "@/pages/Admin";
+import Redeem from "@/pages/Redeem";
+import Journal from "@/pages/Journal";
+import Profile from "@/pages/Profile";
+import { getSession } from "@/lib/auth";
+
+// ponytail: guest lands on assessment first; results saved after register
+function RootGate() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["session"],
+    queryFn: getSession,
+    retry: false,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background">
+        <Loader2 className="size-6 animate-spin text-primary" />
+        <span className="sr-only">Memuat…</span>
+      </div>
+    );
+  }
+
+  if (data?.user) return <Home />;
+  return <Navigate to="/assessment" replace />;
+}
 
 export default function App() {
   return (
@@ -108,12 +135,32 @@ export default function App() {
           }
         />
         <Route
-          path="/"
+          path="/redeem"
           element={
             <SessionGuard>
-              <Home />
+              <Redeem />
             </SessionGuard>
           }
+        />
+        <Route
+          path="/journal"
+          element={
+            <SessionGuard>
+              <Journal />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <SessionGuard>
+              <Profile />
+            </SessionGuard>
+          }
+        />
+        <Route
+          path="/"
+          element={<RootGate />}
         />
       </Routes>
       <Toaster />
