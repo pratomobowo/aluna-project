@@ -1,5 +1,4 @@
 import type { PgTable } from "drizzle-orm/pg-core";
-import { fileURLToPath } from "node:url";
 import { and, eq } from "drizzle-orm";
 import { computeAssessment } from "@aluna/shared";
 import { auth } from "../auth";
@@ -390,7 +389,12 @@ export async function runSeed(): Promise<void> {
   }
 }
 
-const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+// ponytail: detect direct CLI run without breaking CJS bundle (import.meta.url is undefined in dist/index.cjs)
+const isMain =
+  process.argv[1] != null &&
+  ((import.meta as { url?: string }).url?.replace("file://", "") === process.argv[1] ||
+    process.argv[1].endsWith("seed.ts") ||
+    process.argv[1].endsWith("seed.mjs"));
 if (isMain) {
   runSeed()
     .then(() => process.exit(0))
